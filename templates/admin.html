@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Console — ROMUSIC{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+    <div class="flex items-center justify-between border-b border-white/10 pb-6">
+        <div>
+            <div class="text-xs font-mono uppercase tracking-widest text-amber-400 font-bold">Platform Governance</div>
+            <h1 class="text-3xl font-black font-display text-white">ROMUSIC Admin Console</h1>
+        </div>
+        <a href="{{ url_for('upload') }}" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-[#35D6FF] text-[#090B16] font-bold text-xs hover:opacity-90 transition">
+            + Add Master Track
+        </a>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="p-6 rounded-3xl glass-panel border border-white/5">
+            <div class="text-xs font-mono text-gray-400">Total Users</div>
+            <div class="text-3xl font-black font-display text-white mt-2">{{ users|length }}</div>
+        </div>
+        <div class="p-6 rounded-3xl glass-panel border border-white/5">
+            <div class="text-xs font-mono text-gray-400">Master Tracks</div>
+            <div class="text-3xl font-black font-display text-[#35D6FF] mt-2">{{ songs|length }}</div>
+        </div>
+        <div class="p-6 rounded-3xl glass-panel border border-white/5">
+            <div class="text-xs font-mono text-gray-400">Playlists</div>
+            <div class="text-3xl font-black font-display text-[#9B5CFF] mt-2">{{ playlists|length }}</div>
+        </div>
+        <div class="p-6 rounded-3xl glass-panel border border-white/5">
+            <div class="text-xs font-mono text-gray-400">Verified Artists</div>
+            <div class="text-3xl font-black font-display text-amber-400 mt-2">{{ artists|length }}</div>
+        </div>
+    </div>
+
+    <!-- Song Catalog Management -->
+    <section class="glass-panel-elevated p-6 rounded-3xl border border-white/10 space-y-4">
+        <h2 class="text-xl font-bold font-display text-white">Audio Catalog ({{ songs|length }})</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="text-gray-400 border-b border-white/10 text-xs font-mono uppercase">
+                        <th class="pb-3">Track</th>
+                        <th class="pb-3">Language</th>
+                        <th class="pb-3">Genre</th>
+                        <th class="pb-3">Plays</th>
+                        <th class="pb-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for s in songs %}
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="py-3">
+                            <div class="flex items-center space-x-3">
+                                <img src="{{ s.cover_url }}" class="w-10 h-10 rounded-xl object-cover">
+                                <div>
+                                    <div class="font-bold text-white">{{ s.title }}</div>
+                                    <div class="text-xs text-gray-400">{{ s.artist.name if s.artist else 'ROMUSIC' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 text-xs font-mono text-[#35D6FF]">{{ s.language }}</td>
+                        <td class="py-3 text-xs text-gray-400">{{ s.genre }}</td>
+                        <td class="py-3 text-xs font-mono text-gray-300">{{ s.plays_count }}</td>
+                        <td class="py-3 text-right">
+                            <form method="POST" action="{{ url_for('admin_delete_song', song_id=s.id) }}" onsubmit="return confirm('Delete this song from ROMUSIC?')" class="inline">
+                                <button type="submit" class="text-rose-400 hover:text-rose-300 text-xs font-semibold px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 transition">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- User Accounts Table -->
+    <section class="glass-panel p-6 rounded-3xl border border-white/5 space-y-4">
+        <h2 class="text-xl font-bold font-display text-white">Platform Users</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="text-gray-400 border-b border-white/10 text-xs font-mono uppercase">
+                        <th class="pb-3">Username</th>
+                        <th class="pb-3">Email</th>
+                        <th class="pb-3">Role</th>
+                        <th class="pb-3">Created</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for u in users %}
+                    <tr class="hover:bg-white/5 transition">
+                        <td class="py-3 font-semibold text-white">{{ u.username }}</td>
+                        <td class="py-3 text-xs text-gray-400">{{ u.email }}</td>
+                        <td class="py-3 text-xs font-mono">
+                            {% if u.is_admin %}
+                            <span class="px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30">ADMIN</span>
+                            {% else %}
+                            <span class="px-2.5 py-1 rounded-full bg-white/10 text-gray-300">PATRON</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 text-xs font-mono text-gray-500">{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else 'Recent' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+

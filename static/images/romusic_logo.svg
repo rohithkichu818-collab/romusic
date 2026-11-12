@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9B5CFF"/>
+      <stop offset="50%" stop-color="#35D6FF"/>
+      <stop offset="100%" stop-color="#B57EDC"/>
+    </linearGradient>
+    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <!-- Background circular luxury plate -->
+  <circle cx="100" cy="100" r="90" fill="#111426" stroke="url(#logoGrad)" stroke-width="3" filter="url(#neonGlow)"/>
+  <!-- Soundwave R monogram -->
+  <path d="M 65 55 L 65 145" stroke="url(#logoGrad)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 65 55 L 115 55 C 138 55, 142 88, 115 95 L 65 95" stroke="url(#logoGrad)" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M 110 95 L 138 145" stroke="#35D6FF" stroke-width="12" stroke-linecap="round"/>
+  <!-- Modern orbital dot -->
+  <circle cx="145" cy="55" r="7" fill="#35D6FF" filter="url(#neonGlow)"/>
+</svg>

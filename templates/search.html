@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Architecture — ROMUSIC{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+
+    <!-- ============ SEARCH HERO ============ -->
+    <div class="relative max-w-3xl mx-auto text-center space-y-4">
+        <h1 class="text-3xl sm:text-4xl font-black font-display text-white">Find Your Next Vibration</h1>
+        <p class="text-sm text-gray-400">Explore millions of high-fidelity tracks, artists, and sonic architectures.</p>
+
+        <!-- Unified Search Bar -->
+        <form id="unified-search-form" class="relative mt-6" onsubmit="return handleUnifiedSearch(event)">
+            <i data-lucide="search" class="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            <input id="unified-search-input" type="text" name="q" value="{{ query }}" placeholder="Search songs, artists, genres… Malayalam, Tamil, Hindi, Anirudh, Blinding Lights…" autocomplete="off" class="w-full bg-[#181C33] text-white text-base pl-14 pr-36 py-4 rounded-full border border-white/10 focus:border-[#35D6FF] focus:ring-2 focus:ring-[#35D6FF]/30 focus:outline-none shadow-2xl transition">
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-2">
+                <button type="submit" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] font-bold text-xs hover:opacity-95 transition shadow-lg shadow-[#35D6FF]/30">
+                    Search
+                </button>
+            </div>
+        </form>
+
+        <!-- Category & Source Filter Pills -->
+        <div class="flex items-center justify-center space-x-3 mt-4">
+            <button id="tab-global" onclick="switchSearchTab('global')" class="px-5 py-2 rounded-full text-xs font-bold border transition bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/10 border-[#35D6FF]/50 text-white">
+                <i data-lucide="globe" class="w-3.5 h-3.5 inline mr-1.5 text-[#35D6FF]"></i>Global Catalog
+            </button>
+            <button id="tab-local" onclick="switchSearchTab('local')" class="px-5 py-2 rounded-full text-xs font-bold border transition border-white/10 text-gray-400 hover:text-white hover:border-white/30">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 inline mr-1.5 text-[#9B5CFF]"></i>Curated Vault
+            </button>
+        </div>
+
+        <!-- Trending Pills -->
+        <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+            <span class="text-xs text-gray-400 font-mono">Trending:</span>
+            {% for tag in trending_tags %}
+            <a href="#" onclick="document.getElementById('unified-search-input').value='{{ tag }}'; handleUnifiedSearch(); return false;" class="px-3 py-1 rounded-full text-xs font-medium bg-white/5 hover:bg-white/10 border border-white/5 hover:border-[#35D6FF]/40 text-gray-300 hover:text-[#35D6FF] transition">
+                {{ tag }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ============ CATEGORY BROWSING (default state) ============ -->
+    <section id="browse-categories" class="{% if query or category %}hidden{% endif %}">
+        <h2 class="text-xl font-bold font-display text-white mb-6">Browse by Linguistic Frequencies</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <a href="#" onclick="document.getElementById('unified-search-input').value='Malayalam Hits'; handleUnifiedSearch(); return false;" class="p-6 rounded-3xl bg-gradient-to-br from-[#9B5CFF]/30 via-[#111426] to-[#090B16] border border-[#9B5CFF]/40 hover:scale-105 transition shadow-xl group">
+                <div class="text-xs font-mono uppercase text-[#35D6FF] font-bold">God's Own Cyberpunk</div>
+                <h3 class="text-2xl font-black font-display text-white mt-1 group-hover:text-[#35D6FF] transition">Malayalam</h3>
+                <p class="text-xs text-gray-400 mt-2">Aavesham, Premam, Manjummel, Sushin Shyam bangers.</p>
+            </a>
+            <a href="#" onclick="document.getElementById('unified-search-input').value='Tamil Hits Songs'; handleUnifiedSearch(); return false;" class="p-6 rounded-3xl bg-gradient-to-br from-rose-500/30 via-[#111426] to-[#090B16] border border-rose-500/40 hover:scale-105 transition shadow-xl group">
+                <div class="text-xs font-mono uppercase text-rose-400 font-bold">Sonic Riot</div>
+                <h3 class="text-2xl font-black font-display text-white mt-1 group-hover:text-rose-400 transition">Tamil</h3>
+                <p class="text-xs text-gray-400 mt-2">LEO, Jailer, Anirudh high-octane stadium energy.</p>
+            </a>
+            <a href="#" onclick="document.getElementById('unified-search-input').value='Hindi Romantic Songs'; handleUnifiedSearch(); return false;" class="p-6 rounded-3xl bg-gradient-to-br from-amber-500/30 via-[#111426] to-[#090B16] border border-amber-500/40 hover:scale-105 transition shadow-xl group">
+                <div class="text-xs font-mono uppercase text-amber-300 font-bold">Soul & Sufi</div>
+                <h3 class="text-2xl font-black font-display text-white mt-1 group-hover:text-amber-400 transition">Hindi</h3>
+                <p class="text-xs text-gray-400 mt-2">Kesariya, Arjan Vailly, Pritam romantic horizons.</p>
+            </a>
+            <a href="#" onclick="document.getElementById('unified-search-input').value='English Pop Hits 2024'; handleUnifiedSearch(); return false;" class="p-6 rounded-3xl bg-gradient-to-br from-[#35D6FF]/30 via-[#111426] to-[#090B16] border border-[#35D6FF]/40 hover:scale-105 transition shadow-xl group">
+                <div class="text-xs font-mono uppercase text-[#35D6FF] font-bold">Interstellar Mix</div>
+                <h3 class="text-2xl font-black font-display text-white mt-1 group-hover:text-[#35D6FF] transition">English</h3>
+                <p class="text-xs text-gray-400 mt-2">The Weeknd, Hans Zimmer, Synthwave classics.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- ============ LOCAL RESULTS ============ -->
+    <section id="local-results" class="hidden">
+        <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+            <div>
+                <h2 class="text-xl font-bold font-display text-white">
+                    <i data-lucide="hard-drive" class="w-5 h-5 inline mr-2 text-[#35D6FF]"></i>
+                    ROMUSIC Library Results
+                </h2>
+                <span id="local-result-count" class="text-xs font-mono text-gray-400 ml-8"></span>
+            </div>
+        </div>
+        <div id="local-results-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        <div id="local-no-results" class="hidden text-center py-12 space-y-3">
+            <div class="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mx-auto text-gray-500">
+                <i data-lucide="music" class="w-7 h-7"></i>
+            </div>
+            <p class="text-sm text-gray-400">No tracks in local vault match your search.</p>
+            <p class="text-xs text-gray-500">Switch to the <span class="text-[#35D6FF] font-semibold cursor-pointer" onclick="switchSearchTab('global')">Global Catalog</span> to discover millions more.</p>
+        </div>
+    </section>
+
+    <!-- ============ GLOBAL CLOUD RESULTS ============ -->
+    <section id="global-results" class="hidden">
+        <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-2">
+            <div>
+                <h2 class="text-xl font-bold font-display text-white flex items-center space-x-2.5">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-[#35D6FF]"></i>
+                    <span>Search Results</span>
+                </h2>
+                <span id="global-result-count" class="text-xs font-mono text-gray-400 ml-7"></span>
+            </div>
+            <div class="text-[10px] font-mono text-[#35D6FF] flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#35D6FF]/10 border border-[#35D6FF]/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#35D6FF] animate-pulse"></span>
+                <span>Lossless HQ Stream</span>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="global-loading" class="hidden py-16 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto relative">
+                <div class="absolute inset-0 rounded-full border-2 border-[#35D6FF]/30 border-t-[#35D6FF] animate-spin"></div>
+                <i data-lucide="music-2" class="w-7 h-7 text-[#35D6FF]"></i>
+            </div>
+            <p class="text-sm font-semibold text-gray-300">Scanning global music cloud…</p>
+            <p class="text-xs text-gray-500">Retrieving high-fidelity acoustic frequencies.</p>
+        </div>
+
+        <!-- Results Grid -->
+        <div id="global-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 mt-4"></div>
+
+        <!-- No Results -->
+        <div id="global-no-results" class="hidden text-center py-12 space-y-3">
+            <div class="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mx-auto text-gray-500">
+                <i data-lucide="disc-3" class="w-7 h-7 text-gray-400"></i>
+            </div>
+            <p class="text-sm text-gray-400">No tracks found in the catalog for this query.</p>
+        </div>
+
+        <!-- Error -->
+        <div id="global-error" class="hidden text-center py-12 space-y-3">
+            <div class="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto text-rose-400">
+                <i data-lucide="alert-triangle" class="w-7 h-7"></i>
+            </div>
+            <p id="global-error-msg" class="text-sm text-rose-300"></p>
+            <p class="text-xs text-gray-500">Check your connection and try again.</p>
+        </div>
+    </section>
+
+</div>
+
+<script>
+/* ============================================================
+   SEARCH PAGE — DUAL SOURCE SEARCH ENGINE
+   ============================================================ */
+
+let currentTab = 'global'; // Default to Global
+
+function switchSearchTab(tab) {
+    currentTab = tab;
+    const tabLocal = document.getElementById('tab-local');
+    const tabGlobal = document.getElementById('tab-global');
+    const localSection = document.getElementById('local-results');
+    const globalSection = document.getElementById('global-results');
+    const browseSection = document.getElementById('browse-categories');
+
+    // Active / inactive tab styling
+    const activeClasses = 'bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/10 border-[#35D6FF]/50 text-white';
+    const inactiveClasses = 'border-white/10 text-gray-400 hover:text-white hover:border-white/30';
+
+    if (tabLocal) tabLocal.className = `px-5 py-2 rounded-full text-xs font-bold border transition ${tab === 'local' ? activeClasses : inactiveClasses}`;
+    if (tabGlobal) tabGlobal.className = `px-5 py-2 rounded-full text-xs font-bold border transition ${tab === 'global' ? activeClasses : inactiveClasses}`;
+
+    const q = document.getElementById('unified-search-input').value.trim();
+    if (!q) {
+        if (localSection) localSection.classList.add('hidden');
+        if (globalSection) globalSection.classList.add('hidden');
+        if (browseSection) browseSection.classList.remove('hidden');
+        return;
+    }
+
+    if (browseSection) browseSection.classList.add('hidden');
+    if (localSection) localSection.classList.toggle('hidden', tab !== 'local');
+    if (globalSection) globalSection.classList.toggle('hidden', tab !== 'global');
+
+    if (window.lucide) lucide.createIcons();
+}
+
+
+async function handleUnifiedSearch(event) {
+    if (event) event.preventDefault();
+    const q = document.getElementById('unified-search-input').value.trim();
+    if (!q) return false;
+
+    const browse = document.getElementById('browse-categories');
+    if (browse) browse.classList.add('hidden');
+
+    // Always search both sources
+    searchLocal(q);
+    searchGlobal(q);
+
+    // Show active tab
+    switchSearchTab(currentTab);
+    return false;
+}
+
+
+async function searchLocal(q) {
+    const section = document.getElementById('local-results');
+    const grid = document.getElementById('local-results-grid');
+    const noResults = document.getElementById('local-no-results');
+    const countEl = document.getElementById('local-result-count');
+
+    try {
+        const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+        if (!res.ok) throw new Error('Local search error');
+        const tracks = await res.json();
+
+        grid.innerHTML = '';
+        noResults.classList.add('hidden');
+
+        if (!tracks || tracks.length === 0) {
+            noResults.classList.remove('hidden');
+            countEl.textContent = '0 tracks';
+            return;
+        }
+
+        countEl.textContent = tracks.length + ' tracks found';
+
+        tracks.forEach(track => {
+            const card = document.createElement('div');
+            card.className = 'flex items-center justify-between p-3.5 rounded-2xl bg-[#111426]/70 border border-white/5 hover:border-[#35D6FF]/40 transition group cursor-pointer';
+            card.setAttribute('data-action', 'play-song');
+            card.setAttribute('data-song', JSON.stringify(track));
+            card.innerHTML = `
+                <div class="flex items-center space-x-4 overflow-hidden">
+                    <div class="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
+                        <img src="${track.cover_url}" alt="${track.title}" class="w-full h-full object-cover" onerror="this.src='/static/images/covers/cover_default.svg'">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                            <i data-lucide="play" class="w-6 h-6 text-[#35D6FF] fill-current"></i>
+                        </div>
+                    </div>
+                    <div class="truncate">
+                        <h4 class="font-bold text-sm text-white truncate group-hover:text-[#35D6FF] transition">${track.title}</h4>
+                        <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                        <span class="text-[10px] font-mono text-[#B57EDC] uppercase">${track.language || ''} • ${track.genre || ''}</span>
+                    </div>
+                </div>
+                <div class="text-xs font-mono text-gray-400 ml-4">${track.formatted_duration || ''}</div>
+            `;
+            grid.appendChild(card);
+        });
+
+        if (window.lucide) lucide.createIcons();
+    } catch (e) {
+        console.error('Local search failed:', e);
+    }
+}
+
+
+async function searchGlobal(q) {
+    const section = document.getElementById('global-results');
+    const grid = document.getElementById('global-results-grid');
+    const loading = document.getElementById('global-loading');
+    const noResults = document.getElementById('global-no-results');
+    const errorDiv = document.getElementById('global-error');
+    const countEl = document.getElementById('global-result-count');
+
+    // Reset state
+    grid.innerHTML = '';
+    noResults.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+    loading.classList.remove('hidden');
+    countEl.textContent = '';
+
+    try {
+        const res = await fetch('/api/yt/search?q=' + encodeURIComponent(q) + '&limit=12');
+        loading.classList.add('hidden');
+
+        if (!res.ok) {
+            const err = await res.json();
+            document.getElementById('global-error-msg').textContent = err.error || 'Search failed';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+
+        const tracks = await res.json();
+
+        if (tracks.error) {
+            document.getElementById('global-error-msg').textContent = tracks.error;
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+
+        if (!tracks || tracks.length === 0) {
+            noResults.classList.remove('hidden');
+            countEl.textContent = '0 results';
+            return;
+        }
+
+        countEl.textContent = tracks.length + ' tracks found';
+
+        tracks.forEach(track => {
+            const card = document.createElement('div');
+            card.className = 'romusic-card group p-3.5 cursor-pointer flex flex-col justify-between';
+            card.onclick = function() {
+                if (window.player) {
+                    window.player.playTrack(track);
+                }
+            };
+            card.innerHTML = `
+                <div>
+                    <div class="relative w-full aspect-square rounded-2xl overflow-hidden mb-3 bg-[#090B16]">
+                        <img src="${track.cover_url}" alt="${track.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='/static/images/covers/cover_default.svg'">
+                        <!-- Duration badge -->
+                        <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/80 text-[10px] font-mono text-white font-semibold">${track.formatted_duration || ''}</div>
+                        <!-- Neon Play overlay -->
+                        <div class="card-play-btn absolute inset-0 flex items-center justify-center bg-black/40">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] flex items-center justify-center shadow-xl shadow-[#35D6FF]/50 group-hover:scale-110 transition">
+                                <i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>
+                            </div>
+                        </div>
+                        <!-- HQ Stream Badge -->
+                        <div class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#35D6FF]/20 border border-[#35D6FF]/40 text-[10px] font-mono font-bold text-[#35D6FF] flex items-center space-x-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#35D6FF] animate-pulse"></span>
+                            <span>HQ Stream</span>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-sm text-white truncate group-hover:text-[#35D6FF] transition">${track.title}</h4>
+                        <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                        ${track.views ? `<p class="text-[10px] text-gray-500 font-mono">${track.views}</p>` : ''}
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        if (window.lucide) lucide.createIcons();
+    } catch (e) {
+        loading.classList.add('hidden');
+        document.getElementById('global-error-msg').textContent = 'Network error — check your internet connection.';
+        errorDiv.classList.remove('hidden');
+        console.error('Search error:', e);
+    }
+}
+
+
+function playTrack(track) {
+    if (window.player) {
+        window.player.playTrack(track);
+    }
+}
+
+
+// Auto-search if query param is present
+document.addEventListener('DOMContentLoaded', () => {
+    const q = document.getElementById('unified-search-input').value.trim();
+    if (q) {
+        handleUnifiedSearch();
+    }
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{% endblock %}

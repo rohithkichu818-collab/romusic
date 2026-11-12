@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Liked Songs — ROMUSIC{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header Banner -->
+    <div class="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-rose-900/30 via-[#111426] to-[#090B16] border border-rose-500/30 flex flex-col sm:flex-row items-center space-y-6 sm:space-y-0 sm:space-x-8">
+        <div class="w-32 h-32 rounded-3xl bg-gradient-to-tr from-rose-500 via-[#9B5CFF] to-[#35D6FF] flex items-center justify-center text-white shadow-2xl shadow-rose-500/40">
+            <i data-lucide="heart" class="w-16 h-16 fill-current"></i>
+        </div>
+        <div class="space-y-2 text-center sm:text-left">
+            <div class="text-xs font-mono uppercase tracking-widest text-rose-400 font-bold">Auto-Curated Sanctuary</div>
+            <h1 class="text-4xl font-black font-display text-white">Liked Songs</h1>
+            <p class="text-xs sm:text-sm text-gray-300">{{ songs|length }} saved vibrations • Exclusive fidelity</p>
+            {% if songs %}
+            <div class="pt-2">
+                <button data-action="play-song" data-song='{{ songs[0].to_dict()|tojson }}' class="inline-flex items-center space-x-2 px-6 py-2.5 rounded-full bg-rose-500 text-white font-bold text-xs hover:bg-rose-600 transition shadow-lg shadow-rose-500/30">
+                    <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                    <span>Play All</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Song List Table -->
+    <div class="glass-panel rounded-3xl p-6 border border-white/5 overflow-x-auto">
+        {% if songs %}
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="text-gray-400 border-b border-white/5 text-xs font-mono uppercase">
+                    <th class="pb-3 w-12 text-center">#</th>
+                    <th class="pb-3">Title & Artist</th>
+                    <th class="pb-3 hidden md:table-cell">Album</th>
+                    <th class="pb-3 hidden sm:table-cell">Language</th>
+                    <th class="pb-3 text-right">Duration</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                {% for s in songs %}
+                <tr class="group hover:bg-[#9B5CFF]/10 transition cursor-pointer" data-action="play-song" data-song='{{ s.to_dict()|tojson }}'>
+                    <td class="py-3 text-center text-gray-500 group-hover:text-[#35D6FF] font-mono text-xs">
+                        <span class="group-hover:hidden">{{ loop.index }}</span>
+                        <i data-lucide="play" class="w-4 h-4 hidden group-hover:inline-block text-[#35D6FF] fill-current"></i>
+                    </td>
+                    <td class="py-3">
+                        <div class="flex items-center space-x-3">
+                            <img src="{{ s.cover_url }}" class="w-10 h-10 rounded-xl object-cover">
+                            <div>
+                                <div class="font-bold text-white group-hover:text-[#35D6FF] transition">{{ s.title }}</div>
+                                <div class="text-xs text-gray-400">{{ s.artist.name if s.artist else 'ROMUSIC' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 text-xs text-gray-400 hidden md:table-cell">{{ s.album.title if s.album else 'Single' }}</td>
+                    <td class="py-3 text-xs font-mono text-[#B57EDC] hidden sm:table-cell">{{ s.language }}</td>
+                    <td class="py-3 text-right text-xs font-mono text-gray-400">{{ s.formatted_duration() }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-12 text-gray-400 space-y-2">
+            <i data-lucide="heart" class="w-10 h-10 text-gray-600 mx-auto"></i>
+            <p class="text-sm">No songs added to favorites yet.</p>
+            <p class="text-xs text-gray-500">Tap the heart icon on any playing track to save it here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

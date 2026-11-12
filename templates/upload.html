@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Master Audio — ROMUSIC{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-8">
+    <div>
+        <div class="text-xs font-mono uppercase tracking-widest text-[#35D6FF] font-semibold">Artist & Curator Portal</div>
+        <h1 class="text-3xl font-black font-display text-white">Upload New Track</h1>
+        <p class="text-xs sm:text-sm text-gray-400 mt-1">Add licensed high-resolution audio files to the ROMUSIC streaming engine.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="glass-panel-elevated p-8 rounded-3xl border border-[#9B5CFF]/30 space-y-6 shadow-2xl">
+        
+        <!-- Audio File Upload Box -->
+        <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Master Audio File *</label>
+            <div class="relative border-2 border-dashed border-[#9B5CFF]/40 hover:border-[#35D6FF] transition rounded-2xl p-6 text-center cursor-pointer bg-[#181C33]/50">
+                <input type="file" name="file" accept=".mp3,.wav,.ogg,.m4a,.flac" required class="absolute inset-0 opacity-0 cursor-pointer">
+                <i data-lucide="music" class="w-10 h-10 text-[#35D6FF] mx-auto mb-2"></i>
+                <div class="text-sm font-semibold text-white">Click or drag & drop audio track</div>
+                <div class="text-xs text-gray-400 mt-1">Supports MP3, WAV, OGG, M4A, FLAC (Max 150MB)</div>
+            </div>
+        </div>
+
+        <!-- Track Title & Artist -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Track Title *</label>
+                <input type="text" name="title" required placeholder="e.g. Neon Horizon" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Artist / Composer *</label>
+                <input type="text" name="artist" required placeholder="e.g. Sushin Shyam, Anirudh, You" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+            </div>
+        </div>
+
+        <!-- Album & Language -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Album Name (Optional)</label>
+                <input type="text" name="album" placeholder="e.g. Midnight Luxe Vol. 1" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Language *</label>
+                <select name="language" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+                    <option value="Malayalam">Malayalam</option>
+                    <option value="Tamil">Tamil</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="English" selected>English</option>
+                    <option value="Instrumental">Instrumental</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Genre & Mood -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Genre</label>
+                <input type="text" name="genre" value="Electronic / Synthwave" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Sonic Mood</label>
+                <select name="mood" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+                    <option value="Midnight Drive">Midnight Drive</option>
+                    <option value="Aurora">Aurora Sanctuary</option>
+                    <option value="Neon Focus">Neon Focus</option>
+                    <option value="Cyber Chill">Cyber Chill</option>
+                    <option value="Euphoria">Euphoria</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Custom Cover Artwork -->
+        <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Cover Artwork (Optional)</label>
+            <input type="file" name="cover" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#9B5CFF]/20 file:text-[#35D6FF] hover:file:bg-[#9B5CFF]/30">
+        </div>
+
+        <!-- Lyrics -->
+        <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Lyrics (Optional)</label>
+            <textarea name="lyrics" rows="3" placeholder="Paste song lyrics for the Now Playing visualizer..." class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#9B5CFF] via-[#35D6FF] to-[#9B5CFF] text-[#090B16] font-extrabold text-sm hover:scale-[1.01] transition-transform shadow-xl shadow-[#35D6FF]/30">
+            Publish Track to ROMUSIC
+        </button>
+    </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#090B16] text-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ROMUSIC — Next-Gen Music Architecture{% endblock %}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        midnight: '#090B16',
+                        indigoSurface: '#111426',
+                        indigoElevated: '#181C33',
+                        violetAccent: '#9B5CFF',
+                        cyanAccent: '#35D6FF',
+                        lavenderAccent: '#B57EDC',
+                        magentaAccent: '#FF357A'
+                    },
+                    borderRadius: {
+                        '2xl': '18px',
+                        '3xl': '24px'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="theme-color" content="#090B16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ROMUSIC">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/romusic_logo.svg') }}">
+
+    <!-- ROMUSIC Custom Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-[#090B16] text-white h-screen flex flex-col overflow-hidden select-none aurora-bg-mesh">
+
+    <!-- Flash message toasts -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col space-y-2 pointer-events-none">
+                {% for category, msg in messages %}
+                    <div class="px-5 py-3 rounded-2xl glass-panel-elevated shadow-2xl flex items-center space-x-3 text-sm font-medium border {% if category == 'error' %}border-rose-500/50 text-rose-300{% else %}border-[#35D6FF]/50 text-[#35D6FF]{% endif %} pointer-events-auto">
+                        <i data-lucide="{% if category == 'error' %}alert-circle{% else %}sparkles{% endif %}" class="w-5 h-5"></i>
+                        <span>{{ msg }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- ================= SIDEBAR (DESKTOP) ================= -->
+        <aside id="main-sidebar" class="w-72 bg-[#111426]/80 backdrop-blur-2xl border-r border-white/5 flex flex-col justify-between p-6 z-40 transition-transform duration-300 fixed lg:static inset-y-0 left-0 -translate-x-full lg:translate-x-0">
+            <div>
+                <!-- Brand Monogram -->
+                <a href="{{ url_for('index') }}" class="flex items-center space-x-3 group mb-8">
+                    <img src="{{ url_for('static', filename='images/romusic_logo.svg') }}" alt="ROMUSIC" class="w-10 h-10 transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_0_15px_#9B5CFF]">
+                    <div>
+                        <span class="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-[#35D6FF] to-[#9B5CFF] font-display">ROMUSIC</span>
+                        <div class="text-[10px] tracking-widest text-[#B57EDC] font-semibold uppercase -mt-1">Midnight Luxe</div>
+                    </div>
+                </a>
+
+                <!-- Primary Nav -->
+                <div class="space-y-1 mb-8">
+                    <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">Explore</div>
+                    <a href="{{ url_for('index') }}" class="flex items-center space-x-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all {% if request.endpoint == 'index' %}bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/10 text-white border-l-4 border-[#35D6FF]{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        <i data-lucide="compass" class="w-5 h-5 {% if request.endpoint == 'index' %}text-[#35D6FF]{% endif %}"></i>
+                        <span>Home & Discover</span>
+                    </a>
+                    <a href="{{ url_for('search_page') }}" class="flex items-center space-x-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all {% if request.endpoint == 'search_page' %}bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/10 text-white border-l-4 border-[#35D6FF]{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        <i data-lucide="search" class="w-5 h-5 {% if request.endpoint == 'search_page' %}text-[#35D6FF]{% endif %}"></i>
+                        <span>Search Architecture</span>
+                    </a>
+                </div>
+
+                <!-- Library Nav -->
+                <div class="space-y-1 mb-6">
+                    <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">Your Sanctuary</div>
+                    <a href="{{ url_for('library_page') }}" class="flex items-center space-x-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all {% if request.endpoint == 'library_page' %}bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/10 text-white border-l-4 border-[#35D6FF]{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        <i data-lucide="library" class="w-5 h-5 {% if request.endpoint == 'library_page' %}text-[#35D6FF]{% endif %}"></i>
+                        <span>Your Library</span>
+                    </a>
+                    <a href="{{ url_for('favorites_page') }}" class="flex items-center space-x-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all {% if request.endpoint == 'favorites_page' %}bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/10 text-white border-l-4 border-[#35D6FF]{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        <i data-lucide="heart" class="w-5 h-5 text-rose-400"></i>
+                        <span>Liked Songs</span>
+                    </a>
+                    <button onclick="openCreatePlaylistModal()" class="w-full flex items-center space-x-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-all text-left">
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-[#9B5CFF]"></i>
+                        <span>Create Playlist</span>
+                    </button>
+                    <a href="{{ url_for('upload') }}" class="flex items-center space-x-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all {% if request.endpoint == 'upload' %}bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/10 text-white border-l-4 border-[#35D6FF]{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        <i data-lucide="upload-cloud" class="w-5 h-5 text-[#35D6FF]"></i>
+                        <span>Upload Audio</span>
+                    </a>
+                </div>
+
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <div class="space-y-1">
+                    <div class="text-[11px] font-bold text-amber-400/80 uppercase tracking-wider px-3 mb-2">Management</div>
+                    <a href="{{ url_for('admin_dashboard') }}" class="flex items-center space-x-3.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-amber-300 hover:bg-amber-400/10 transition-all">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        <span>Admin Console</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- User Auth Box / Moniker -->
+            <div class="pt-4 border-t border-white/5">
+                {% if current_user.is_authenticated %}
+                <div class="flex items-center justify-between p-2 rounded-2xl bg-white/5 border border-white/10">
+                    <div class="flex items-center space-x-3 overflow-hidden">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#9B5CFF] to-[#35D6FF] flex items-center justify-center font-bold text-sm shadow-md">
+                            {{ current_user.username[0]|upper }}
+                        </div>
+                        <div class="truncate">
+                            <div class="text-sm font-semibold truncate">{{ current_user.username }}</div>
+                            <div class="text-[11px] text-[#35D6FF] font-mono">Luxe Patron</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('logout') }}" title="Sign Out" class="p-2 text-gray-400 hover:text-rose-400 transition">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </a>
+                </div>
+                {% else %}
+                <div class="space-y-2">
+                    <a href="{{ url_for('login') }}" class="block w-full py-2.5 text-center text-sm font-semibold rounded-xl bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] hover:opacity-95 transition shadow-lg shadow-[#9B5CFF]/30">
+                        Sign In
+                    </a>
+                    <a href="{{ url_for('register') }}" class="block w-full py-2 text-center text-xs font-semibold rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition">
+                        Create Account
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- ================= MAIN CONTENT VIEWPORT ================= -->
+        <div class="flex-1 flex flex-col overflow-hidden relative">
+
+            <!-- Top Floating Header -->
+            <header class="h-20 border-b border-white/5 px-6 lg:px-10 flex items-center justify-between glass-panel z-30">
+                <div class="flex items-center space-x-4 flex-1">
+                    <!-- Mobile Hamburger -->
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 text-gray-400 hover:text-white rounded-xl bg-white/5">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+
+                    <!-- Header Live Search Field -->
+                    <form action="{{ url_for('search_page') }}" method="GET" id="search-bar-container" class="relative w-full max-w-md hidden md:block">
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" name="q" placeholder="Search Malayalam, Tamil, Hindi, English, Moods..." autocomplete="off" class="romusic-live-search w-full bg-[#181C33]/90 text-sm text-white placeholder-gray-400 pl-11 pr-4 py-2.5 rounded-full border border-white/10 focus:outline-none focus:border-[#35D6FF] focus:ring-1 focus:ring-[#35D6FF] transition shadow-inner">
+                        </div>
+                        <!-- Instant Live Search Dropdown -->
+                        <div id="search-instant-results" class="absolute top-12 left-0 right-0 glass-panel-elevated rounded-2xl shadow-2xl border border-[#9B5CFF]/30 hidden z-50 max-h-96 overflow-y-auto"></div>
+                    </form>
+                </div>
+
+                <!-- Right Quick Actions -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.player && window.player.openModal()" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-300 hover:text-white transition">
+                        <div class="flex space-x-0.5 items-end h-3">
+                            <span class="eq-bar"></span>
+                            <span class="eq-bar"></span>
+                            <span class="eq-bar"></span>
+                            <span class="eq-bar"></span>
+                        </div>
+                        <span>Visualizer</span>
+                    </button>
+                    <a href="{{ url_for('upload') }}" class="hidden sm:flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#9B5CFF]/20 to-[#35D6FF]/20 border border-[#35D6FF]/40 text-xs font-semibold text-white hover:border-[#35D6FF] transition shadow-lg shadow-[#35D6FF]/10">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#35D6FF]"></i>
+                        <span>Upload Song</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Scrollable Content -->
+            <main class="flex-1 overflow-y-auto px-6 lg:px-12 pt-8 pb-36">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- ================= FLOATING LUXURY MUSIC PLAYER (OPENBLAST-GRADE) ================= -->
+    <div id="floating-player" class="fixed bottom-4 left-4 right-4 lg:left-80 lg:right-10 z-40 glass-panel-elevated rounded-3xl p-3 px-5 shadow-2xl border border-[#9B5CFF]/30 flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0 backdrop-blur-3xl transition-all duration-300">
+        
+        <!-- Track Info & Thumbnail -->
+        <div class="flex items-center space-x-3.5 w-full md:w-1/4">
+            <div class="relative group cursor-pointer flex-shrink-0" onclick="window.player.openModal('art')">
+                <img id="player-thumb" src="{{ url_for('static', filename='images/covers/cover_midnight.svg') }}" class="w-12 h-12 rounded-xl object-cover shadow-lg border border-white/10 transition-transform group-hover:scale-105">
+                <div class="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                    <i data-lucide="maximize-2" class="w-4 h-4 text-[#35D6FF]"></i>
+                </div>
+            </div>
+            <div class="truncate flex-1">
+                <div id="player-title" class="font-bold text-sm text-white truncate cursor-pointer hover:text-[#35D6FF] transition" onclick="window.player.openModal('art')">Select a track</div>
+                <div class="flex items-center space-x-2 mt-0.5 truncate">
+                    <span id="player-artist" class="text-xs text-gray-400 truncate">ROMUSIC Soundscape</span>
+                    <span id="player-quality-tag" class="hidden sm:inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-mono quality-pill">HQ 256K</span>
+                </div>
+            </div>
+            <button id="btn-like" title="Favorite Track" class="p-2 text-gray-400 hover:text-rose-400 transition flex-shrink-0">
+                <i id="icon-like" data-lucide="heart" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Center Playback Controls & Scrubber -->
+        <div class="flex flex-col items-center w-full md:w-2/4 px-2">
+            <!-- Controls Buttons -->
+            <div class="flex items-center space-x-5 mb-1">
+                <button id="btn-shuffle" title="Shuffle" class="text-gray-400 hover:text-white transition">
+                    <i data-lucide="shuffle" class="w-4 h-4"></i>
+                </button>
+                <button id="btn-prev" title="Previous Track" class="text-gray-300 hover:text-white hover:scale-110 transition">
+                    <i data-lucide="skip-back" class="w-5 h-5"></i>
+                </button>
+                <button id="btn-play" title="Play/Pause" class="w-11 h-11 rounded-full bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] flex items-center justify-center hover:scale-105 transition shadow-lg shadow-[#35D6FF]/40 font-bold">
+                    <i id="icon-play" data-lucide="play" class="w-5 h-5 fill-current"></i>
+                </button>
+                <button id="btn-next" title="Next Track" class="text-gray-300 hover:text-white hover:scale-110 transition">
+                    <i data-lucide="skip-forward" class="w-5 h-5"></i>
+                </button>
+                <button id="btn-repeat" title="Repeat" class="text-[#35D6FF] hover:text-white transition">
+                    <i data-lucide="repeat" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Scrubber Slider -->
+            <div class="w-full flex items-center space-x-3 text-[11px] font-mono text-gray-400">
+                <span id="player-current-time">0:00</span>
+                <input id="player-progress" type="range" min="0" max="100" value="0" class="flex-1">
+                <span id="player-duration-time">0:00</span>
+            </div>
+        </div>
+
+        <!-- Right Quick Actions: Lyrics, Sleep Timer, Volume, Fullscreen -->
+        <div class="hidden md:flex items-center justify-end space-x-3 w-1/4">
+            <button id="btn-toggle-lyrics" title="Synchronized Lyrics" class="p-1.5 text-gray-400 hover:text-[#35D6FF] transition hover:scale-110">
+                <i data-lucide="mic-2" class="w-4 h-4"></i>
+            </button>
+            <div class="relative">
+                <button id="btn-sleep-timer" title="Sleep Timer" class="p-1.5 text-gray-400 hover:text-[#9B5CFF] transition hover:scale-110 flex items-center space-x-1">
+                    <i data-lucide="timer" class="w-4 h-4"></i>
+                    <span id="sleep-timer-badge" class="hidden text-[9px] font-mono font-bold bg-[#9B5CFF]/30 text-[#35D6FF] px-1 rounded-full"></span>
+                </button>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="btn-mute" class="text-gray-400 hover:text-white transition">
+                    <i id="icon-volume" data-lucide="volume-2" class="w-4 h-4"></i>
+                </button>
+                <input id="player-volume" type="range" min="0" max="100" value="85" class="w-16">
+            </div>
+            <button id="btn-expand" title="Open Fullscreen Player" class="p-1.5 text-gray-400 hover:text-[#35D6FF] transition hover:scale-110">
+                <i data-lucide="maximize-2" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= FULLSCREEN NOW PLAYING EXPERIENCE (OPENBLAST-STYLE) ================= -->
+    <div id="now-playing-modal" class="fixed inset-0 z-50 bg-[#090B16]/98 backdrop-blur-3xl p-6 lg:p-10 flex flex-col justify-between hidden-modal overflow-hidden">
+        <!-- Ambient Backdrop Glow -->
+        <div id="ambient-backdrop-glow" class="ambient-glow-disc w-[500px] h-[500px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+
+        <!-- Top Navigation Bar & View Switcher -->
+        <div class="relative z-10 flex items-center justify-between border-b border-white/10 pb-4">
+            <!-- Branding -->
+            <div class="flex items-center space-x-3">
+                <img src="{{ url_for('static', filename='images/romusic_logo.svg') }}" class="w-7 h-7">
+                <span class="font-display font-bold text-sm tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-[#35D6FF]">NOW PLAYING</span>
+            </div>
+
+            <!-- View Switcher Tabs (OpenBlast Style) -->
+            <div class="flex items-center space-x-1 bg-[#111426] p-1 rounded-full border border-white/10 text-xs font-semibold">
+                <button id="tab-btn-art" onclick="window.player.switchTab('art')" class="view-tab-btn active px-4 py-1.5 rounded-full transition flex items-center space-x-1.5">
+                    <i data-lucide="disc" class="w-3.5 h-3.5"></i>
+                    <span>Artwork</span>
+                </button>
+                <button id="tab-btn-lyrics" onclick="window.player.switchTab('lyrics')" class="view-tab-btn px-4 py-1.5 rounded-full transition text-gray-400 hover:text-white flex items-center space-x-1.5">
+                    <i data-lucide="mic-2" class="w-3.5 h-3.5 text-[#35D6FF]"></i>
+                    <span>Karaoke Lyrics</span>
+                </button>
+                <button id="tab-btn-queue" onclick="window.player.switchTab('queue')" class="view-tab-btn px-4 py-1.5 rounded-full transition text-gray-400 hover:text-white flex items-center space-x-1.5">
+                    <i data-lucide="list-music" class="w-3.5 h-3.5"></i>
+                    <span>Up Next</span>
+                </button>
+            </div>
+
+            <!-- Close & Actions -->
+            <div class="flex items-center space-x-3">
+                <button onclick="window.player.toggleSleepTimerModal()" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-[#9B5CFF] transition" title="Sleep Timer">
+                    <i data-lucide="timer" class="w-5 h-5"></i>
+                </button>
+                <button id="btn-close-modal" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition text-gray-300 hover:text-white">
+                    <i data-lucide="chevron-down" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Center Stage Panes (Switchable) -->
+        <div class="relative z-10 flex-1 flex items-center justify-center py-4 overflow-hidden">
+            
+            <!-- PANE 1: ARTWORK & ACOUSTIC SPECTRUM -->
+            <div id="modal-pane-art" class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center h-full">
+                <!-- Oversized Artwork -->
+                <div class="md:col-span-6 flex flex-col items-center justify-center">
+                    <div class="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+                        <img id="modal-cover" src="{{ url_for('static', filename='images/covers/cover_midnight.svg') }}" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                <!-- Info & Real-Time Visualizer Spectrum -->
+                <div class="md:col-span-6 flex flex-col justify-center space-y-5">
+                    <div>
+                        <span id="modal-genre" class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#9B5CFF]/20 text-[#35D6FF] border border-[#9B5CFF]/30 mb-3">
+                            HQ M4A Stream • Lossless
+                        </span>
+                        <h2 id="modal-title" class="text-2xl sm:text-4xl font-black font-display text-white leading-tight">Select a track</h2>
+                        <div id="modal-artist" class="text-lg text-[#35D6FF] font-semibold mt-1">ROMUSIC Soundscape</div>
+                        <div id="modal-album" class="text-xs text-gray-400 mt-1">Single Edition</div>
+                    </div>
+
+                    <!-- Spectrum Canvas -->
+                    <div class="w-full rounded-2xl bg-[#111426]/70 border border-white/10 p-4">
+                        <div class="flex items-center justify-between text-[11px] font-mono text-gray-400 mb-2">
+                            <span class="text-[#35D6FF] font-bold flex items-center space-x-1">
+                                <span class="w-2 h-2 rounded-full bg-[#35D6FF] animate-pulse"></span>
+                                <span>ACOUSTIC SPECTRUM</span>
+                            </span>
+                            <span>24-bit • 48 kHz</span>
+                        </div>
+                        <canvas id="audio-visualizer" class="w-full h-24"></canvas>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button onclick="window.player.switchTab('lyrics')" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white transition flex items-center space-x-2">
+                            <i data-lucide="mic-2" class="w-4 h-4 text-[#35D6FF]"></i>
+                            <span>View Synced Lyrics</span>
+                        </button>
+                        <button onclick="window.player.switchTab('queue')" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white transition flex items-center space-x-2">
+                            <i data-lucide="list-music" class="w-4 h-4 text-[#9B5CFF]"></i>
+                            <span>View Queue</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANE 2: SYNCHRONIZED KARAOKE LYRICS (OPENBLAST-GRADE) -->
+            <div id="modal-pane-lyrics" class="hidden w-full max-w-2xl h-full flex flex-col items-center">
+                <div class="w-full flex items-center justify-between py-2 text-xs font-mono text-gray-400 border-b border-white/5 mb-3">
+                    <span class="text-[#35D6FF] flex items-center space-x-1">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>POWERED BY LRCLIB</span>
+                    </span>
+                    <span>Click any line to seek</span>
+                </div>
+                <div id="synced-lyrics-container" class="lyrics-container w-full flex-1 overflow-y-auto px-4 py-8 text-center">
+                    <div id="synced-lyrics-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- PANE 3: UP NEXT QUEUE -->
+            <div id="modal-pane-queue" class="hidden w-full max-w-2xl h-full flex flex-col">
+                <div class="flex items-center justify-between py-2 text-xs font-bold uppercase tracking-wider text-gray-400 border-b border-white/10 mb-4">
+                    <span>Playback Queue</span>
+                    <i data-lucide="list-music" class="w-4 h-4 text-[#35D6FF]"></i>
+                </div>
+                <div id="modal-queue-list" class="flex-1 overflow-y-auto space-y-2 pr-2"></div>
+            </div>
+        </div>
+
+        <!-- Modal Bottom Controls Bar -->
+        <div class="relative z-10 max-w-2xl mx-auto w-full pt-2">
+            <div class="w-full flex items-center space-x-3 text-xs font-mono text-gray-400 mb-3">
+                <span id="modal-current-time">0:00</span>
+                <input id="modal-progress" type="range" min="0" max="100" value="0" class="flex-1">
+                <span id="modal-duration">0:00</span>
+            </div>
+
+            <div class="flex items-center justify-center space-x-8">
+                <button id="modal-btn-prev" title="Previous Track" class="text-gray-300 hover:text-white hover:scale-110 transition">
+                    <i data-lucide="skip-back" class="w-7 h-7"></i>
+                </button>
+                <button id="modal-btn-play" title="Play/Pause" class="w-16 h-16 rounded-full bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] flex items-center justify-center hover:scale-105 transition shadow-2xl shadow-[#35D6FF]/50 font-bold">
+                    <i id="modal-icon-play" data-lucide="play" class="w-8 h-8 fill-current"></i>
+                </button>
+                <button id="modal-btn-next" title="Next Track" class="text-gray-300 hover:text-white hover:scale-110 transition">
+                    <i data-lucide="skip-forward" class="w-7 h-7"></i>
+                </button>
+                <button id="modal-btn-like" title="Like Track" class="text-gray-400 hover:text-rose-400 transition">
+                    <i id="modal-icon-like" data-lucide="heart" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SLEEP TIMER POPUP MODAL ================= -->
+    <div id="sleep-timer-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="w-full max-w-sm bg-[#111426] rounded-3xl border border-[#9B5CFF]/40 p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="moon" class="w-5 h-5 text-[#9B5CFF]"></i>
+                    <h3 class="text-lg font-bold font-display text-white">Sleep Timer</h3>
+                </div>
+                <button onclick="window.player.toggleSleepTimerModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-gray-400 mb-5">Audio will smoothly fade out and stop when the timer finishes.</p>
+            <div class="grid grid-cols-2 gap-2.5">
+                <button onclick="window.player.setSleepTimer(15)" class="py-3 rounded-xl bg-[#181C33] hover:bg-[#9B5CFF]/20 hover:border-[#9B5CFF] border border-white/5 text-sm font-semibold transition">15 Minutes</button>
+                <button onclick="window.player.setSleepTimer(30)" class="py-3 rounded-xl bg-[#181C33] hover:bg-[#9B5CFF]/20 hover:border-[#9B5CFF] border border-white/5 text-sm font-semibold transition">30 Minutes</button>
+                <button onclick="window.player.setSleepTimer(45)" class="py-3 rounded-xl bg-[#181C33] hover:bg-[#9B5CFF]/20 hover:border-[#9B5CFF] border border-white/5 text-sm font-semibold transition">45 Minutes</button>
+                <button onclick="window.player.setSleepTimer(60)" class="py-3 rounded-xl bg-[#181C33] hover:bg-[#9B5CFF]/20 hover:border-[#9B5CFF] border border-white/5 text-sm font-semibold transition">60 Minutes</button>
+                <button onclick="window.player.setSleepTimer('end_of_track')" class="col-span-2 py-3 rounded-xl bg-[#181C33] hover:bg-[#35D6FF]/20 hover:border-[#35D6FF] border border-white/5 text-sm font-semibold transition text-[#35D6FF]">End of Current Track</button>
+                <button onclick="window.player.setSleepTimer(0)" class="col-span-2 py-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition">Turn Off Timer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: CREATE PLAYLIST ================= -->
+    <div id="create-playlist-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="w-full max-w-md bg-[#111426] rounded-3xl border border-[#9B5CFF]/40 p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold font-display text-white">Create New Playlist</h3>
+                <button onclick="closeCreatePlaylistModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form onsubmit="submitCreatePlaylist(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Playlist Name</label>
+                    <input id="new-playlist-name" type="text" placeholder="e.g. Midnight Cyber Drive" required class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Description (Optional)</label>
+                    <textarea id="new-playlist-desc" rows="3" placeholder="Set the acoustic vibe and intention..." class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none"></textarea>
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeCreatePlaylistModal()" class="w-1/2 py-2.5 rounded-xl border border-white/10 text-sm font-semibold hover:bg-white/5 transition">Cancel</button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] text-sm font-bold hover:opacity-90 transition shadow-lg shadow-[#9B5CFF]/30">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#111426]/95 backdrop-blur-2xl border-t border-white/10 flex items-center justify-around z-30">
+        <a href="{{ url_for('index') }}" class="flex flex-col items-center text-xs font-medium {% if request.endpoint == 'index' %}text-[#35D6FF]{% else %}text-gray-400{% endif %}">
+            <i data-lucide="compass" class="w-5 h-5 mb-1"></i>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('search_page') }}" class="flex flex-col items-center text-xs font-medium {% if request.endpoint == 'search_page' %}text-[#35D6FF]{% else %}text-gray-400{% endif %}">
+            <i data-lucide="search" class="w-5 h-5 mb-1"></i>
+            <span>Search</span>
+        </a>
+        <a href="{{ url_for('library_page') }}" class="flex flex-col items-center text-xs font-medium {% if request.endpoint == 'library_page' %}text-[#35D6FF]{% else %}text-gray-400{% endif %}">
+            <i data-lucide="library" class="w-5 h-5 mb-1"></i>
+            <span>Library</span>
+        </a>
+        <a href="{{ url_for('favorites_page') }}" class="flex flex-col items-center text-xs font-medium {% if request.endpoint == 'favorites_page' %}text-[#35D6FF]{% else %}text-gray-400{% endif %}">
+            <i data-lucide="heart" class="w-5 h-5 mb-1 text-rose-400"></i>
+            <span>Liked</span>
+        </a>
+    </nav>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- Register PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => {
+                    console.warn('SW registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

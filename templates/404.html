@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}404 — Frequency Lost — ROMUSIC{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto text-center py-20 space-y-4">
+    <div class="text-7xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF]">404</div>
+    <h1 class="text-2xl font-bold text-white">Frequency Out of Resonance</h1>
+    <p class="text-xs text-gray-400">The acoustic coordinates you requested could not be synthesized in this universe.</p>
+    <div class="pt-4">
+        <a href="{{ url_for('index') }}" class="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] font-bold text-xs hover:opacity-95 transition">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            <span>Return to Sanctuary</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+

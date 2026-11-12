@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — ROMUSIC{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-12">
+    <div class="glass-panel-elevated p-8 sm:p-10 rounded-3xl border border-[#9B5CFF]/30 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-[#35D6FF]/30 blur-2xl pointer-events-none"></div>
+
+        <div class="relative z-10 text-center mb-8">
+            <img src="{{ url_for('static', filename='images/romusic_logo.svg') }}" class="w-16 h-16 mx-auto mb-3 drop-shadow-[0_0_20px_#9B5CFF]">
+            <h1 class="text-3xl font-black font-display text-white">Join ROMUSIC</h1>
+            <p class="text-xs text-gray-400 mt-1">Claim your seat in the future of streaming architecture.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" class="space-y-4 relative z-10">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Username Moniker *</label>
+                <input type="text" name="username" required placeholder="e.g. cyber_patron" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Email Address *</label>
+                <input type="email" name="email" required placeholder="you@domain.com" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Password *</label>
+                <input type="password" name="password" required placeholder="Choose a secure passphrase" class="w-full bg-[#181C33] text-sm text-white px-4 py-3 rounded-xl border border-white/10 focus:border-[#35D6FF] focus:outline-none">
+            </div>
+
+            <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] font-extrabold text-sm hover:scale-[1.01] transition-transform shadow-xl shadow-[#35D6FF]/30 mt-2">
+                Create Account
+            </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-white/5 text-center text-xs text-gray-400">
+            Already registered? 
+            <a href="{{ url_for('login') }}" class="text-[#35D6FF] hover:underline font-semibold ml-1">Sign In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

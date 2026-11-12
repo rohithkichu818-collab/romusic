@@ -1,0 +1,321 @@
+/* ========================================================
+   ROMUSIC — MIDNIGHT LUXE × NEON AURORA DESIGN SYSTEM
+   ======================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg-midnight: #090B16;
+  --surface-indigo: #111426;
+  --surface-elevated: #181C33;
+  --surface-glass: rgba(17, 20, 38, 0.72);
+  --accent-violet: #9B5CFF;
+  --accent-cyan: #35D6FF;
+  --accent-lavender: #B57EDC;
+  --accent-magenta: #FF357A;
+  --glow-violet: 0 0 25px rgba(155, 92, 255, 0.45);
+  --glow-cyan: 0 0 25px rgba(53, 214, 255, 0.45);
+}
+
+body {
+  background-color: var(--bg-midnight);
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
+  selection-background-color: var(--accent-violet);
+  selection-color: #FFFFFF;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Syne', 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism surface */
+.glass-panel {
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-elevated {
+  background: rgba(24, 28, 51, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(155, 92, 255, 0.22);
+}
+
+/* Aurora Glow Backgrounds */
+.aurora-bg-mesh {
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(155, 92, 255, 0.18) 0%, transparent 40%),
+    radial-gradient(circle at 85% 25%, rgba(53, 214, 255, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(181, 126, 220, 0.12) 0%, transparent 50%);
+}
+
+/* Neon Glows */
+.neon-glow-violet {
+  box-shadow: 0 0 20px rgba(155, 92, 255, 0.4);
+}
+.neon-glow-cyan {
+  box-shadow: 0 0 20px rgba(53, 214, 255, 0.4);
+}
+
+.neon-border-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.neon-border-hover:hover {
+  border-color: rgba(53, 214, 255, 0.6);
+  box-shadow: 0 10px 30px -10px rgba(53, 214, 255, 0.3);
+}
+
+/* ROMUSIC Album Cards */
+.romusic-card {
+  border-radius: 22px;
+  background: var(--surface-indigo);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.romusic-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(155, 92, 255, 0.35);
+  box-shadow: 0 20px 40px -15px rgba(9, 11, 22, 0.9), 0 0 25px rgba(155, 92, 255, 0.25);
+}
+
+.romusic-card .card-play-btn {
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.romusic-card:hover .card-play-btn {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Vinyl / Artwork Spinning Animation */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinning-vinyl {
+  animation: spin-slow 14s linear infinite;
+}
+
+.spinning-vinyl-paused {
+  animation-play-state: paused;
+}
+
+/* Equalizer Bars Animation */
+@keyframes eqBounce {
+  0%, 100% { height: 4px; }
+  50% { height: 18px; }
+}
+
+.eq-bar {
+  width: 3px;
+  background: var(--accent-cyan);
+  border-radius: 2px;
+  animation: eqBounce 1s ease-in-out infinite alternate;
+}
+.eq-bar:nth-child(2) { animation-delay: 0.2s; height: 12px; }
+.eq-bar:nth-child(3) { animation-delay: 0.4s; height: 16px; }
+.eq-bar:nth-child(4) { animation-delay: 0.1s; height: 8px; }
+
+/* Custom Sliders */
+input[type="range"] {
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  height: 5px;
+  cursor: pointer;
+  outline: none;
+  transition: height 0.2s;
+}
+
+input[type="range"]:hover {
+  height: 7px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #35D6FF;
+  box-shadow: 0 0 10px #35D6FF;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.25);
+  background: #9B5CFF;
+  box-shadow: 0 0 14px #9B5CFF;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(155, 92, 255, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(53, 214, 255, 0.6);
+}
+
+/* Fullscreen Now Playing Overlay */
+#now-playing-modal {
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#now-playing-modal.hidden-modal {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(100%);
+}
+
+#now-playing-modal.visible-modal {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0%);
+}
+
+/* Toast Notification */
+#romusic-toast {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(100px);
+  opacity: 0;
+}
+#romusic-toast.toast-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* YouTube Floating & Cinema Dock */
+#yt-player-wrapper {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#yt-player-wrapper.yt-modal-docked {
+  bottom: auto !important;
+  right: auto !important;
+  top: 50% !important;
+  left: 30% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 90vw !important;
+  max-width: 580px !important;
+  height: 48vh !important;
+  max-height: 380px !important;
+  z-index: 60 !important;
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.95), 0 0 50px rgba(155, 92, 255, 0.4);
+  border-color: rgba(53, 214, 255, 0.7);
+}
+
+@media (max-width: 1024px) {
+  #yt-player-wrapper.yt-modal-docked {
+    left: 50% !important;
+    top: 38% !important;
+    max-width: 90vw !important;
+    max-height: 35vh !important;
+  }
+}
+
+#yt-player-wrapper.yt-collapsed {
+  height: 28px !important;
+  overflow: hidden !important;
+}
+
+/* OpenBlast Karaoke Synchronized Lyrics */
+.lyrics-container {
+  scroll-behavior: smooth;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+.lyric-line {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.35;
+  transform: scale(0.96);
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 12px;
+  margin: 4px 0;
+  display: block;
+}
+
+.lyric-line:hover {
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.0);
+}
+
+.lyric-line.active {
+  opacity: 1 !important;
+  color: #35D6FF !important;
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+  transform: scale(1.06) !important;
+  text-shadow: 0 0 20px rgba(53, 214, 255, 0.6);
+  background: rgba(53, 214, 255, 0.08);
+}
+
+.lyric-line.past {
+  opacity: 0.55;
+  color: #CBD5E1;
+}
+
+/* Ambient Artwork Glow Backdrop */
+.ambient-glow-disc {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+  transition: all 1s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Quality Badge */
+.quality-pill {
+  background: rgba(53, 214, 255, 0.1);
+  border: 1px solid rgba(53, 214, 255, 0.3);
+  color: #35D6FF;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Sleep timer modal */
+#sleep-timer-modal {
+  transition: all 0.3s ease;
+}
+
+/* View switcher tabs */
+.view-tab-btn.active {
+  color: #35D6FF;
+  border-color: #35D6FF;
+  background: rgba(53, 214, 255, 0.1);
+}
+
+/* Hide scrollbar for carousel but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

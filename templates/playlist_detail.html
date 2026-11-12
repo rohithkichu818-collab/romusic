@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ playlist.name }} — ROMUSIC{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-[#181C33] via-[#111426] to-[#090B16] border border-[#9B5CFF]/30 flex flex-col sm:flex-row items-center space-y-6 sm:space-y-0 sm:space-x-8">
+        <div class="w-36 h-36 rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex-shrink-0">
+            <img src="{{ playlist.cover_url }}" alt="{{ playlist.name }}" class="w-full h-full object-cover">
+        </div>
+        <div class="space-y-2 text-center sm:text-left">
+            <div class="text-xs font-mono uppercase tracking-widest text-[#35D6FF] font-bold">Curated Playlist</div>
+            <h1 class="text-3xl sm:text-4xl font-black font-display text-white">{{ playlist.name }}</h1>
+            <p class="text-xs sm:text-sm text-gray-300">{{ playlist.description or 'Handcrafted acoustic frequency sequence.' }}</p>
+            <div class="text-xs font-mono text-gray-400">Created by <span class="text-white font-semibold">{{ playlist.owner.username }}</span> • {{ playlist.songs|length }} Tracks</div>
+            
+            {% if playlist.songs %}
+            <div class="pt-3">
+                <button data-action="play-song" data-song='{{ playlist.songs[0].to_dict()|tojson }}' class="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] font-bold text-xs hover:opacity-95 transition shadow-lg shadow-[#35D6FF]/30">
+                    <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                    <span>Play Playlist</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tracks List -->
+    <div class="glass-panel rounded-3xl p-6 border border-white/5 overflow-x-auto">
+        {% if playlist.songs %}
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="text-gray-400 border-b border-white/5 text-xs font-mono uppercase">
+                    <th class="pb-3 w-12 text-center">#</th>
+                    <th class="pb-3">Title & Artist</th>
+                    <th class="pb-3 hidden md:table-cell">Genre</th>
+                    <th class="pb-3 hidden sm:table-cell">Language</th>
+                    <th class="pb-3 text-right">Duration</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                {% for s in playlist.songs %}
+                <tr class="group hover:bg-[#9B5CFF]/10 transition cursor-pointer" data-action="play-song" data-song='{{ s.to_dict()|tojson }}'>
+                    <td class="py-3 text-center text-gray-500 group-hover:text-[#35D6FF] font-mono text-xs">
+                        <span class="group-hover:hidden">{{ loop.index }}</span>
+                        <i data-lucide="play" class="w-4 h-4 hidden group-hover:inline-block text-[#35D6FF] fill-current"></i>
+                    </td>
+                    <td class="py-3">
+                        <div class="flex items-center space-x-3">
+                            <img src="{{ s.cover_url }}" class="w-10 h-10 rounded-xl object-cover">
+                            <div>
+                                <div class="font-bold text-white group-hover:text-[#35D6FF] transition">{{ s.title }}</div>
+                                <div class="text-xs text-gray-400">{{ s.artist.name if s.artist else 'ROMUSIC' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 text-xs text-gray-400 hidden md:table-cell">{{ s.genre }}</td>
+                    <td class="py-3 text-xs font-mono text-[#B57EDC] hidden sm:table-cell">{{ s.language }}</td>
+                    <td class="py-3 text-right text-xs font-mono text-gray-400">{{ s.formatted_duration() }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-12 text-gray-400">
+            <p class="text-sm">This playlist is currently silent.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

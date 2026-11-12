@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+        
+        <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FF2A55" />
+                <stop offset="100%" stop-color="#9B5CFF" />
+            </linearGradient>
+            <filter id="neon" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="15" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+        </defs>
+        <rect width="600" height="600" fill="#090B16"/>
+        <!-- Concentric Cyber Rings -->
+        <circle cx="300" cy="260" r="160" stroke="url(#grad1)" stroke-width="2" fill="none" opacity="0.4" stroke-dasharray="10 8"/>
+        <circle cx="300" cy="260" r="120" stroke="#FF2A55" stroke-width="3" fill="none" opacity="0.7"/>
+        <circle cx="300" cy="260" r="80" stroke="#9B5CFF" stroke-width="4" fill="url(#grad1)" filter="url(#neon)" opacity="0.85"/>
+        <circle cx="300" cy="260" r="30" fill="#090B16"/>
+        <circle cx="300" cy="260" r="10" fill="#FF2A55"/>
+        
+        <!-- Glass Badge overlay -->
+        <rect x="50" y="470" width="500" height="85" rx="18" fill="rgba(17, 20, 38, 0.75)" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5"/>
+        <text x="80" y="512" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif" font-size="24" font-weight="800" fill="#FFFFFF" letter-spacing="0.5">ARJAN VAILLY</text>
+        <text x="80" y="538" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="600" fill="#9B5CFF" letter-spacing="2" text-transform="uppercase">Bhupinder Babbal • ANIMAL</text>
+        <circle cx="510" cy="512" r="18" fill="#FF2A55" opacity="0.9"/>
+        <polygon points="506,504 518,512 506,520" fill="#090B16"/>
+    </svg>

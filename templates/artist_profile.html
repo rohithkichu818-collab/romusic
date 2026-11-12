@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ artist.name }} — ROMUSIC{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+    <!-- Artist Banner -->
+    <div class="relative rounded-3xl overflow-hidden glass-panel-elevated border border-white/10 p-8 sm:p-12 flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
+        <div class="w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden border-4 border-[#35D6FF] shadow-2xl flex-shrink-0">
+            <img src="{{ artist.image_url }}" alt="{{ artist.name }}" class="w-full h-full object-cover">
+        </div>
+        <div class="space-y-2 text-center md:text-left">
+            <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#35D6FF]/10 text-[#35D6FF] text-xs font-mono font-bold">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                <span>VERIFIED COMPOSER</span>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-black font-display text-white">{{ artist.name }}</h1>
+            <p class="text-xs sm:text-sm text-gray-300 max-w-xl">{{ artist.bio }}</p>
+            <div class="text-xs font-mono text-[#B57EDC] pt-1">{{ artist.monthly_listeners }} Monthly Patrons • {{ artist.songs|length }} Master Tracks</div>
+
+            {% if artist.songs %}
+            <div class="pt-4">
+                <button data-action="play-song" data-song='{{ artist.songs[0].to_dict()|tojson }}' class="inline-flex items-center space-x-2 px-8 py-3 rounded-full bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] font-bold text-xs hover:opacity-95 transition shadow-lg shadow-[#35D6FF]/40">
+                    <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                    <span>Play Discography</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Discography Tracks -->
+    <section>
+        <h2 class="text-2xl font-bold font-display text-white mb-6">Master Tracks by {{ artist.name }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for s in artist.songs %}
+            <div class="flex items-center justify-between p-3.5 rounded-2xl bg-[#111426]/70 border border-white/5 hover:border-[#35D6FF]/40 transition group cursor-pointer" data-action="play-song" data-song='{{ s.to_dict()|tojson }}'>
+                <div class="flex items-center space-x-4 overflow-hidden">
+                    <img src="{{ s.cover_url }}" class="w-12 h-12 rounded-xl object-cover flex-shrink-0">
+                    <div class="truncate">
+                        <div class="font-bold text-sm text-white truncate group-hover:text-[#35D6FF] transition">{{ s.title }}</div>
+                        <div class="text-xs text-gray-400 truncate">{{ s.album.title if s.album else 'Single' }}</div>
+                    </div>
+                </div>
+                <div class="text-xs font-mono text-gray-400 ml-4">{{ s.formatted_duration() }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
