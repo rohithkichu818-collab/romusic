@@ -314,6 +314,13 @@ class RoMusicPlayer {
         this.updateMetadataUI(track);
         this.renderQueue();
 
+        // Persist active track & queue so navigation never loses it
+        try {
+            localStorage.setItem('romusic_current_track', JSON.stringify(track));
+            localStorage.setItem('romusic_queue', JSON.stringify(this.queue));
+            localStorage.setItem('romusic_current_index', this.currentIndex);
+        } catch (e) {}
+
         // Determine stream ID
         const streamId = track.youtube_id || (isNaN(track.id) ? track.id : null);
 
@@ -556,6 +563,8 @@ class RoMusicPlayer {
             const percent = (current / duration) * 100;
             if (this.progressBar) this.progressBar.value = percent;
             if (this.modalProgress) this.modalProgress.value = percent;
+            const mobileProg = document.getElementById('mobile-mini-progress');
+            if (mobileProg) mobileProg.style.width = `${percent}%`;
         }
 
         const currentFormatted = this.formatTime(current);
@@ -625,6 +634,22 @@ class RoMusicPlayer {
                 </svg>
             `;
             this.btnPlay.setAttribute('title', isPlaying ? 'Pause' : 'Play');
+        }
+
+        // Update Mobile Play Button
+        const btnPlayMobile = document.getElementById('btn-play-mobile');
+        if (btnPlayMobile) {
+            btnPlayMobile.innerHTML = isPlaying ? `
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                    <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                </svg>
+            ` : `
+                <svg class="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="6 3 20 12 6 21 6 3"></polygon>
+                </svg>
+            `;
+            btnPlayMobile.setAttribute('title', isPlaying ? 'Pause' : 'Play');
         }
 
         // Update Modal Play Button directly with clean SVGs
@@ -737,7 +762,8 @@ class RoMusicPlayer {
     }
 
     updateLikeUI(isLiked) {
-        [this.iconLike, this.modalIconLike].forEach(icon => {
+        const mobileIconLike = document.getElementById('icon-like-mobile');
+        [this.iconLike, this.modalIconLike, mobileIconLike].forEach(icon => {
             if (!icon) return;
             if (isLiked) {
                 icon.classList.add('fill-rose-500', 'text-rose-500');
@@ -1163,8 +1189,35 @@ class RoMusicPlayer {
         disc.style.background = bg;
     }
 
-    /* ------- INITIAL QUEUE LOADER ------- */
+    /* ------- INITIAL QUEUE LOADER (PERSISTENCE-AWARE) ------- */
     async loadInitialQueue() {
+        // Step 1: Check if user already had an active track loaded or playing in localStorage
+        const savedTrackRaw = localStorage.getItem('romusic_current_track');
+        if (savedTrackRaw) {
+            try {
+                const savedTrack = JSON.parse(savedTrackRaw);
+                if (savedTrack && (savedTrack.title || savedTrack.id)) {
+                    this.currentTrack = savedTrack;
+                    this.updateMetadataUI(savedTrack);
+
+                    const savedQueue = localStorage.getItem('romusic_queue');
+                    if (savedQueue) {
+                        try { this.queue = JSON.parse(savedQueue); } catch (e) {}
+                    }
+                    const savedIndex = localStorage.getItem('romusic_current_index');
+                    if (savedIndex !== null) {
+                        this.currentIndex = parseInt(savedIndex) || 0;
+                    }
+                    this.renderQueue();
+                    // PRESERVE CURRENT SONG! DO NOT OVERWRITE WITH MALARE!
+                    return;
+                }
+            } catch (e) {
+                console.warn('[RoMusic Track Restore Error]:', e);
+            }
+        }
+
+        // Step 2: Only if no track was ever loaded, load initial catalogue
         try {
             const resp = await fetch('/api/songs');
             const songs = await resp.json();

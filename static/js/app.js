@@ -169,9 +169,119 @@ window.toggleSidebar = function() {
     }
 };
 
+// ========================================================
+// SPA NAVIGATION ROUTER (Zero Audio Interruption Engine)
+// Keeps active playback (e.g. Kalyani) alive across all pages!
+// ========================================================
+window.navigateTo = async function(url, pushState = true) {
+    try {
+        const res = await fetch(url);
+        if (!res.ok) {
+            window.location.href = url;
+            return;
+        }
+        const text = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+
+        const newMain = doc.querySelector('main');
+        const currentMain = document.querySelector('main');
+
+        if (newMain && currentMain) {
+            currentMain.innerHTML = newMain.innerHTML;
+            document.title = doc.title;
+
+            if (pushState) {
+                history.pushState({ url }, doc.title, url);
+            }
+
+            // Update active states on sidebar and mobile bottom nav
+            const navLinks = document.querySelectorAll('#main-sidebar a, nav a');
+            navLinks.forEach(a => {
+                const href = a.getAttribute('href');
+                const isMatch = href && (href === url || (url.startsWith(href) && href !== '/'));
+                if (a.closest('#main-sidebar')) {
+                    if (isMatch) {
+                        a.classList.add('bg-gradient-to-r', 'from-[#9B5CFF]/30', 'to-[#35D6FF]/10', 'text-white', 'border-l-4', 'border-[#35D6FF]');
+                        a.classList.remove('text-gray-300', 'hover:bg-white/5');
+                    } else {
+                        a.classList.remove('bg-gradient-to-r', 'from-[#9B5CFF]/30', 'to-[#35D6FF]/10', 'text-white', 'border-l-4', 'border-[#35D6FF]');
+                        a.classList.add('text-gray-300');
+                    }
+                } else if (a.closest('nav')) {
+                    a.classList.toggle('text-[#35D6FF]', Boolean(isMatch));
+                    a.classList.toggle('text-gray-400', !isMatch);
+                }
+            });
+
+            // Re-execute scripts inside main
+            const scripts = currentMain.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+
+            if (window.lucide) lucide.createIcons();
+            currentMain.scrollTop = 0;
+            window.initLiveSearch();
+        } else {
+            window.location.href = url;
+        }
+    } catch (err) {
+        console.warn('[SPA Navigate fallback]:', err);
+        window.location.href = url;
+    }
+};
+
+window.addEventListener('popstate', () => {
+    window.navigateTo(window.location.href, false);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) lucide.createIcons();
     window.initLiveSearch();
+
+    // Intercept internal page navigation links so audio never stops!
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && !e.defaultPrevented) {
+            const href = link.getAttribute('href');
+            if (
+                href &&
+                !href.startsWith('#') &&
+                !href.startsWith('javascript:') &&
+                !href.startsWith('mailto:') &&
+                !href.startsWith('tel:') &&
+                !link.hasAttribute('download') &&
+                link.target !== '_blank' &&
+                link.origin === window.location.origin &&
+                !href.startsWith('/logout') &&
+                !href.startsWith('/login') &&
+                !href.startsWith('/register')
+            ) {
+                e.preventDefault();
+                window.navigateTo(href);
+                return;
+            }
+        }
+    });
+
+    // Intercept top search bar form to preserve playback
+    const searchForm = document.getElementById('search-bar-container');
+    if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = searchForm.querySelector('input[name="q"]');
+            const q = input ? input.value.trim() : '';
+            if (q) {
+                window.navigateTo(`/search?q=${encodeURIComponent(q)}`);
+                const dropdown = document.getElementById('search-instant-results');
+                if (dropdown) dropdown.classList.add('hidden');
+            }
+        });
+    }
 
     // Delegated click handler for play-song buttons and cards
     document.addEventListener('click', (e) => {

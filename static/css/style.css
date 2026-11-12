@@ -319,3 +319,39 @@ input[type="range"]:hover::-webkit-slider-thumb {
   scrollbar-width: none;
 }
 
+/* ========================================================
+   DEDICATED MOBILE NATIVE APP GUI STYLES
+   ======================================================== */
+@media (max-width: 768px) {
+  body {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Mobile floating mini-player bar */
+  #floating-player {
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(53, 214, 255, 0.15);
+  }
+
+  /* Safe area padding for iPhone notches and modern Android navigation bars */
+  nav.lg\:hidden {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Main viewport padding so content is never hidden behind floating player */
+  main {
+    padding-bottom: 140px !important;
+  }
+
+  /* Mobile card grid tap responsiveness */
+  .romusic-card {
+    border-radius: 18px;
+  }
+  .romusic-card:active {
+    transform: scale(0.97);
+  }
+}
+
+
