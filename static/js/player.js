@@ -37,10 +37,110 @@ class RoMusicPlayer {
         this.animFrameId = null;
         this.isVisualizerInit = false;
 
+        // Dual Audio Engine: 'html5' (local uploads) | 'youtube' (instant global stream)
+        this.currentAudioSource = 'html5';
+        this.ytPlayer = null;
+        this.ytReady = false;
+        this.ytPollTimer = null;
+
         this.initElements();
         this.bindEvents();
         this.restoreSettings();
+        this.initYouTubeEngine();
         this.loadInitialQueue();
+    }
+
+    initYouTubeEngine() {
+        if (window.YT && window.YT.Player) {
+            this.createYTPlayer();
+        } else {
+            const prevReady = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = () => {
+                if (typeof prevReady === 'function') {
+                    try { prevReady(); } catch (e) {}
+                }
+                this.createYTPlayer();
+            };
+        }
+    }
+
+    createYTPlayer() {
+        const container = document.getElementById('romusic-yt-player');
+        if (!container || this.ytPlayer) return;
+
+        try {
+            this.ytPlayer = new YT.Player('romusic-yt-player', {
+                height: '1',
+                width: '1',
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 0,
+                    'disablekb': 1,
+                    'fs': 0,
+                    'playsinline': 1,
+                    'rel': 0,
+                    'origin': window.location.origin
+                },
+                events: {
+                    'onReady': () => {
+                        this.ytReady = true;
+                    },
+                    'onStateChange': (e) => this.onYTStateChange(e),
+                    'onError': (e) => this.onYTError(e)
+                }
+            });
+        } catch (e) {
+            console.warn('[RoMusic YT Engine Init]:', e);
+        }
+    }
+
+    onYTStateChange(event) {
+        if (!window.YT) return;
+        if (event.data === YT.PlayerState.PLAYING) {
+            this.onPlayState(true);
+            this.startVisualizer();
+            this.startYTPolling();
+        } else if (event.data === YT.PlayerState.PAUSED) {
+            this.onPlayState(false);
+            this.stopYTPolling();
+        } else if (event.data === YT.PlayerState.ENDED) {
+            this.stopYTPolling();
+            this.onEnded();
+        } else if (event.data === YT.PlayerState.CUED) {
+            if (this.ytPlayer && typeof this.ytPlayer.playVideo === 'function') {
+                this.ytPlayer.playVideo();
+            }
+        }
+    }
+
+    onYTError(event) {
+        console.warn('[RoMusic YT Engine Error, fallback to direct stream]:', event.data);
+        if (this.currentTrack) {
+            this.currentAudioSource = 'html5';
+            this.stopYTPolling();
+            const streamId = this.currentTrack.youtube_id || this.currentTrack.id;
+            const tParam = encodeURIComponent(this.currentTrack.title || '');
+            const aParam = encodeURIComponent(this.currentTrack.artist || '');
+            this.audio.src = `/api/stream/${streamId}?title=${tParam}&artist=${aParam}`;
+            this.audio.play().then(() => this.onPlayState(true)).catch(console.warn);
+        }
+    }
+
+    startYTPolling() {
+        this.stopYTPolling();
+        this.ytPollTimer = setInterval(() => {
+            if (!this.ytPlayer || !this.ytReady || this.currentAudioSource !== 'youtube') return;
+            const cur = (typeof this.ytPlayer.getCurrentTime === 'function') ? this.ytPlayer.getCurrentTime() : 0;
+            const dur = (typeof this.ytPlayer.getDuration === 'function') ? this.ytPlayer.getDuration() : (this.currentTrack ? this.currentTrack.duration : 0);
+            this.onTimeUpdate(cur, dur);
+        }, 250);
+    }
+
+    stopYTPolling() {
+        if (this.ytPollTimer) {
+            clearInterval(this.ytPollTimer);
+            this.ytPollTimer = null;
+        }
     }
 
     initElements() {
@@ -214,19 +314,49 @@ class RoMusicPlayer {
         this.updateMetadataUI(track);
         this.renderQueue();
 
-        // Determine stream URL with auto-healing metadata parameters
-        const streamId = track.youtube_id || track.id;
-        const tParam = encodeURIComponent(track.title || '');
-        const aParam = encodeURIComponent(track.artist || '');
-        const streamUrl = `/api/stream/${streamId}?title=${tParam}&artist=${aParam}`;
+        // Determine stream ID
+        const streamId = track.youtube_id || (isNaN(track.id) ? track.id : null);
 
-        this.audio.src = streamUrl;
-        
-        try {
-            await this.audio.play();
-            this.onPlayState(true);
-        } catch (err) {
-            console.warn('[RoMusic Playback Error]:', err);
+        // Check if we can play directly via high-speed global delivery engine (YouTube IFrame API)
+        if (streamId && (this.ytReady || (window.YT && window.YT.Player))) {
+            this.currentAudioSource = 'youtube';
+            this.audio.pause();
+            
+            if (this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
+                this.ytPlayer.loadVideoById(streamId);
+                this.ytPlayer.playVideo();
+                this.onPlayState(true);
+            } else {
+                this.createYTPlayer();
+                setTimeout(() => {
+                    if (this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
+                        this.ytPlayer.loadVideoById(streamId);
+                        this.ytPlayer.playVideo();
+                        this.onPlayState(true);
+                    }
+                }, 600);
+            }
+        } else {
+            // HTML5 Fallback or local file
+            this.currentAudioSource = 'html5';
+            this.stopYTPolling();
+            if (this.ytPlayer && typeof this.ytPlayer.stopVideo === 'function') {
+                this.ytPlayer.stopVideo();
+            }
+
+            const sId = track.youtube_id || track.id;
+            const tParam = encodeURIComponent(track.title || '');
+            const aParam = encodeURIComponent(track.artist || '');
+            const streamUrl = `/api/stream/${sId}?title=${tParam}&artist=${aParam}`;
+
+            this.audio.src = streamUrl;
+            
+            try {
+                await this.audio.play();
+                this.onPlayState(true);
+            } catch (err) {
+                console.warn('[RoMusic Playback Error]:', err);
+            }
         }
 
         // Fetch LRCLIB synchronized lyrics
@@ -248,6 +378,17 @@ class RoMusicPlayer {
         }
 
         this.ensureAudioContext();
+
+        if (this.currentAudioSource === 'youtube' && this.ytPlayer) {
+            if (this.isPlaying) {
+                if (typeof this.ytPlayer.pauseVideo === 'function') this.ytPlayer.pauseVideo();
+                this.onPlayState(false);
+            } else {
+                if (typeof this.ytPlayer.playVideo === 'function') this.ytPlayer.playVideo();
+                this.onPlayState(true);
+            }
+            return;
+        }
 
         if (this.audio.paused) {
             this.audio.play().then(() => this.onPlayState(true)).catch(console.warn);
@@ -278,12 +419,30 @@ class RoMusicPlayer {
     }
 
     seek(percent) {
+        if (this.currentAudioSource === 'youtube' && this.ytPlayer) {
+            const dur = (typeof this.ytPlayer.getDuration === 'function' ? this.ytPlayer.getDuration() : 0) || (this.currentTrack ? this.currentTrack.duration : 0);
+            if (dur > 0) {
+                const targetTime = (percent / 100) * dur;
+                if (typeof this.ytPlayer.seekTo === 'function') this.ytPlayer.seekTo(targetTime, true);
+                this.onTimeUpdate(targetTime, dur);
+            }
+            return;
+        }
+
         if (!this.audio.duration || isNaN(this.audio.duration)) return;
         const targetTime = (percent / 100) * this.audio.duration;
         this.audio.currentTime = targetTime;
     }
 
     seekToTime(seconds) {
+        if (this.currentAudioSource === 'youtube' && this.ytPlayer) {
+            if (typeof this.ytPlayer.seekTo === 'function') {
+                this.ytPlayer.seekTo(seconds, true);
+                this.onTimeUpdate(seconds);
+            }
+            return;
+        }
+
         if (seconds >= 0 && this.audio.duration && seconds <= this.audio.duration) {
             this.audio.currentTime = seconds;
             if (this.audio.paused) {
@@ -293,18 +452,43 @@ class RoMusicPlayer {
     }
 
     seekRelative(deltaSeconds) {
+        if (this.currentAudioSource === 'youtube' && this.ytPlayer) {
+            const cur = (typeof this.ytPlayer.getCurrentTime === 'function') ? this.ytPlayer.getCurrentTime() : 0;
+            const dur = (typeof this.ytPlayer.getDuration === 'function') ? this.ytPlayer.getDuration() : 0;
+            const target = Math.max(0, Math.min(dur || 9999, cur + deltaSeconds));
+            if (typeof this.ytPlayer.seekTo === 'function') this.ytPlayer.seekTo(target, true);
+            this.onTimeUpdate(target, dur);
+            return;
+        }
+
         if (!this.audio.duration) return;
         this.audio.currentTime = Math.max(0, Math.min(this.audio.duration, this.audio.currentTime + deltaSeconds));
     }
 
     setVolume(value) {
-        const vol = Math.max(0, Math.min(100, parseFloat(value))) / 100;
-        this.audio.volume = vol;
+        const vol = Math.max(0, Math.min(100, parseFloat(value)));
+        this.audio.volume = vol / 100;
+        if (this.ytPlayer && typeof this.ytPlayer.setVolume === 'function') {
+            try { this.ytPlayer.setVolume(vol); } catch (e) {}
+        }
         localStorage.setItem('romusic_volume', value);
-        this.updateVolumeIcon(vol);
+        this.updateVolumeIcon(vol / 100);
     }
 
     toggleMute() {
+        if (this.currentAudioSource === 'youtube' && this.ytPlayer && typeof this.ytPlayer.isMuted === 'function') {
+            try {
+                if (this.ytPlayer.isMuted()) {
+                    this.ytPlayer.unMute();
+                    this.updateVolumeIcon(this.audio.volume || 0.85);
+                } else {
+                    this.ytPlayer.mute();
+                    this.updateVolumeIcon(0);
+                }
+            } catch (e) {}
+            return;
+        }
+
         if (this.audio.volume > 0) {
             this._prevVolume = this.audio.volume;
             this.audio.volume = 0;
@@ -364,9 +548,9 @@ class RoMusicPlayer {
     }
 
     /* ------- AUDIO EVENT HANDLERS ------- */
-    onTimeUpdate() {
-        const current = this.audio.currentTime || 0;
-        const duration = this.audio.duration || (this.currentTrack ? this.currentTrack.duration : 0);
+    onTimeUpdate(forcedCurrent = null, forcedDuration = null) {
+        const current = forcedCurrent !== null ? forcedCurrent : (this.audio.currentTime || 0);
+        const duration = forcedDuration !== null ? forcedDuration : (this.audio.duration || (this.currentTrack ? this.currentTrack.duration : 0));
 
         if (duration > 0) {
             const percent = (current / duration) * 100;
@@ -497,6 +681,18 @@ class RoMusicPlayer {
     onError(e) {
         console.warn('[RoMusic Audio Error]:', e);
         this._retryCount = (this._retryCount || 0) + 1;
+
+        // Auto-recover via direct stream engine if available
+        if (this.currentTrack && (this.currentTrack.youtube_id || isNaN(this.currentTrack.id))) {
+            const vid = this.currentTrack.youtube_id || this.currentTrack.id;
+            if (this.ytReady && this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
+                this.currentAudioSource = 'youtube';
+                this.ytPlayer.loadVideoById(vid);
+                this.ytPlayer.playVideo();
+                this.onPlayState(true);
+                return;
+            }
+        }
         
         if (this._retryCount <= 2 && this.currentTrack) {
             this.showToast('Re-connecting audio stream...');
