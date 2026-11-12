@@ -68,6 +68,20 @@ def allowed_file(filename):
 # ---------- OPENBLAST-STYLE AUDIO STREAMING ENGINE & LRCLIB LYRICS ----------
 STREAM_CACHE = {}
 
+def extract_best_audio_url(info):
+    """Helper to extract direct audio URL from yt-dlp info dictionary."""
+    if not info:
+        return None
+    if info.get('url'):
+        return info['url']
+    formats = info.get('formats', [])
+    audio_formats = [f for f in formats if f.get('acodec') != 'none' and f.get('url')]
+    if audio_formats:
+        audio_formats.sort(key=lambda x: x.get('abr') or 0, reverse=True)
+        return audio_formats[0]['url']
+    return None
+
+
 def get_youtube_audio_url(video_id, title=None, artist=None):
     """Extract direct audio stream URL with 2-hour in-memory cache and automatic query fallback."""
     now = time.time()
@@ -84,6 +98,12 @@ def get_youtube_audio_url(video_id, title=None, artist=None):
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
+        'socket_timeout': 10,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios'],
+            }
+        }
     }
 
     # Attempt 1: Direct video ID extraction
@@ -91,7 +111,7 @@ def get_youtube_audio_url(video_id, title=None, artist=None):
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(f'https://www.youtube.com/watch?v={video_id}', download=False)
-                url = info.get('url') if info else None
+                url = extract_best_audio_url(info)
                 if url:
                     STREAM_CACHE[video_id] = (url, now + 7200) # Cache for 2 hours
                     return url
@@ -107,7 +127,7 @@ def get_youtube_audio_url(video_id, title=None, artist=None):
                 entries = info.get('entries', []) if info else []
                 if entries and entries[0]:
                     top = entries[0]
-                    fallback_url = top.get('url')
+                    fallback_url = extract_best_audio_url(top)
                     fallback_id = top.get('id')
                     if fallback_url:
                         if fallback_id:
@@ -817,6 +837,12 @@ def api_yt_search():
             'extract_flat': True,
             'skip_download': True,
             'no_warnings': True,
+            'socket_timeout': 10,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'ios'],
+                }
+            }
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             search_query = f"ytsearch{max_results}:{q} music"
