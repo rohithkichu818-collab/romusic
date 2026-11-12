@@ -1,0 +1,16 @@
+name: romusic
+services:
+  - name: romusic-web
+    type: web
+    git:
+      repository: github.com/rohithkichu818-collab/romusic
+      branch: main
+    instance_types:
+      scopes:
+        - eco
+    ports:
+      - port: 8000
+        protocol: http
+    routes:
+      - path: /
+        port: 8000
