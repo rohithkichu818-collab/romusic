@@ -635,6 +635,102 @@ def api_songs():
     user_id = current_user.id if current_user.is_authenticated else None
     return jsonify([s.to_dict(user_id) for s in songs])
 
+@app.route('/api/recommendations')
+def api_recommendations():
+    """
+    Spotify-grade Smart Autoplay & Related Songs Recommendation Engine.
+    Returns songs matching the current artist, genre, language, or acoustic vibe.
+    """
+    title = request.args.get('title', '').strip()
+    artist = request.args.get('artist', '').strip()
+    genre = request.args.get('genre', '').strip()
+    language = request.args.get('language', '').strip()
+
+    user_id = current_user.id if current_user.is_authenticated else None
+    seen_ids = set()
+    recommendations = []
+
+    # 1. Query local songs by same artist or genre/language
+    if artist:
+        local_artist_songs = Song.query.join(Artist).filter(
+            Artist.name.ilike(f"%{artist}%"),
+            Song.title != title
+        ).limit(4).all()
+        for s in local_artist_songs:
+            if s.id not in seen_ids:
+                seen_ids.add(s.id)
+                d = s.to_dict(user_id)
+                d['vibe_match'] = f"From {artist}"
+                recommendations.append(d)
+
+    if language:
+        local_lang_songs = Song.query.filter(
+            Song.language == language,
+            Song.title != title
+        ).limit(3).all()
+        for s in local_lang_songs:
+            if s.id not in seen_ids:
+                seen_ids.add(s.id)
+                d = s.to_dict(user_id)
+                d['vibe_match'] = f"Similar {language} Vibe"
+                recommendations.append(d)
+
+    # 2. Query Global dynamic cloud recommendations (Spotify Radio style)
+    if YT_DLP_AVAILABLE and (artist or title):
+        try:
+            clean_title = re.sub(r'[\(\[].*?[\)\]]', '', title).strip()
+            clean_artist = re.sub(r'[\(\[].*?[\)\]]', '', artist).strip()
+            if clean_artist and clean_artist.lower() not in ('various artists', 'universal artist', 'unknown'):
+                rec_query = f"{clean_artist} songs hit audio"
+            else:
+                rec_query = f"{clean_title} similar songs audio"
+
+            ydl_opts = {
+                'quiet': True,
+                'extract_flat': True,
+                'skip_download': True,
+                'no_warnings': True,
+                'socket_timeout': 8,
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android', 'ios'],
+                    }
+                }
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(f"ytsearch10:{rec_query}", download=False)
+                entries = info.get('entries', []) if info else []
+                for d in entries:
+                    if not d:
+                        continue
+                    vid = d.get('id', '')
+                    if not vid or vid in seen_ids:
+                        continue
+                    rec_title = d.get('title', 'Untitled')
+                    if clean_title and clean_title.lower() == rec_title.lower():
+                        continue
+
+                    seen_ids.add(vid)
+                    thumb = d.get('thumbnail') or f"https://img.youtube.com/vi/{vid}/hqdefault.jpg"
+                    recommendations.append({
+                        'id': vid,
+                        'youtube_id': vid,
+                        'title': rec_title,
+                        'artist': d.get('channel') or d.get('uploader') or artist or 'Related Artist',
+                        'cover_url': thumb,
+                        'stream_url': f'/api/stream/{vid}',
+                        'duration': d.get('duration') or 0,
+                        'formatted_duration': _fmt_secs(d.get('duration')),
+                        'views': _fmt_views(d.get('view_count')),
+                        'source': 'stream',
+                        'vibe_match': f"Radio Mix"
+                    })
+        except Exception as e:
+            print(f"[Recommendations Error]: {e}")
+
+    return jsonify(recommendations)
+
+
 @app.route('/api/song/<int:song_id>')
 def api_song(song_id):
     song = Song.query.get_or_404(song_id)

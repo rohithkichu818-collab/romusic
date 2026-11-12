@@ -302,11 +302,10 @@ class RoMusicPlayer {
                 this.queue.unshift(track);
                 this.currentIndex = 0;
             }
-        } else if (!this.queue.some(t => String(t.id) === String(track.id))) {
-            this.queue.push(track);
-            this.currentIndex = this.queue.length - 1;
         } else {
-            this.currentIndex = this.queue.findIndex(t => String(t.id) === String(track.id));
+            // Fresh song chosen by user: Initialize dynamic Spotify Radio queue based on this track!
+            this.queue = [track];
+            this.currentIndex = 0;
         }
 
         this.currentTrack = track;
@@ -320,6 +319,9 @@ class RoMusicPlayer {
             localStorage.setItem('romusic_queue', JSON.stringify(this.queue));
             localStorage.setItem('romusic_current_index', this.currentIndex);
         } catch (e) {}
+
+        // Fetch Spotify-grade Smart Recommendations for the current track!
+        this.fetchSmartRecommendations(track);
 
         // Determine stream ID
         const streamId = track.youtube_id || (isNaN(track.id) ? track.id : null);
@@ -412,7 +414,13 @@ class RoMusicPlayer {
         } else {
             this.currentIndex = (this.currentIndex + 1) % this.queue.length;
         }
-        this.playTrack(this.queue[this.currentIndex]);
+        const nextTrack = this.queue[this.currentIndex];
+        this.playTrack(nextTrack, this.queue);
+
+        // Spotify-style endless stream: fetch more related tracks when nearing end of queue
+        if (this.currentIndex >= this.queue.length - 2) {
+            this.fetchSmartRecommendations(nextTrack);
+        }
     }
 
     playPrevious() {
@@ -422,7 +430,35 @@ class RoMusicPlayer {
             return;
         }
         this.currentIndex = (this.currentIndex - 1 + this.queue.length) % this.queue.length;
-        this.playTrack(this.queue[this.currentIndex]);
+        this.playTrack(this.queue[this.currentIndex], this.queue);
+    }
+
+    async fetchSmartRecommendations(track) {
+        if (!track || !track.title) return;
+        try {
+            const title = encodeURIComponent(track.title || '');
+            const artist = encodeURIComponent(track.artist || '');
+            const genre = encodeURIComponent(track.genre || '');
+            const lang = encodeURIComponent(track.language || '');
+            const res = await fetch(`/api/recommendations?title=${title}&artist=${artist}&genre=${genre}&language=${lang}`);
+            if (!res.ok) return;
+            const recs = await res.json();
+            if (Array.isArray(recs) && recs.length > 0) {
+                // Deduplicate against existing tracks in the queue
+                const existingIds = new Set(this.queue.map(t => String(t.youtube_id || t.id)));
+                const newTracks = recs.filter(t => !existingIds.has(String(t.youtube_id || t.id)));
+
+                if (newTracks.length > 0) {
+                    this.queue = [...this.queue, ...newTracks];
+                    this.renderQueue();
+                    try {
+                        localStorage.setItem('romusic_queue', JSON.stringify(this.queue));
+                    } catch (e) {}
+                }
+            }
+        } catch (e) {
+            console.warn('[Smart Recommendations Error]:', e);
+        }
     }
 
     seek(percent) {
@@ -1089,14 +1125,17 @@ class RoMusicPlayer {
                     ${isCurrent ? '<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><i data-lucide="volume-2" class="w-3.5 h-3.5 text-[#35D6FF]"></i></div>' : ''}
                 </div>
                 <div class="truncate flex-1">
-                    <div class="text-xs font-semibold truncate ${isCurrent ? 'text-[#35D6FF]' : 'text-white'}">${this.escapeHtml(track.title)}</div>
+                    <div class="flex items-center space-x-1.5 truncate">
+                        <span class="text-xs font-semibold truncate ${isCurrent ? 'text-[#35D6FF]' : 'text-white'}">${this.escapeHtml(track.title)}</span>
+                        ${track.vibe_match ? `<span class="text-[8px] font-mono text-[#35D6FF] uppercase px-1 py-0.2 rounded bg-[#35D6FF]/10 border border-[#35D6FF]/20 flex-shrink-0">${track.vibe_match}</span>` : ''}
+                    </div>
                     <div class="text-[10px] text-gray-400 truncate">${this.escapeHtml(track.artist)}</div>
                 </div>
                 <span class="text-[10px] font-mono text-gray-400 flex-shrink-0">${track.formatted_duration || '3:30'}</span>
             `;
             el.onclick = () => {
                 this.currentIndex = idx;
-                this.playTrack(this.queue[idx]);
+                this.playTrack(this.queue[idx], this.queue);
             };
             this.queueListEl.appendChild(el);
         });
