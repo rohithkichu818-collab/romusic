@@ -50,6 +50,7 @@ android/app/*.iml
 build-output/
 *.apk
 *.aab
+!static/download/*.apk
 
 # IDE & Editor caches
 .vscode/

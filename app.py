@@ -258,6 +258,21 @@ def service_worker():
     return send_file(os.path.join(app.root_path, 'static', 'sw.js'), mimetype='application/javascript')
 
 
+@app.route('/download')
+@app.route('/download/apk')
+def download_apk():
+    """Direct APK download route for mobile devices."""
+    apk_path = os.path.join(app.root_path, 'static', 'download', 'ROMUSIC.apk')
+    if os.path.exists(apk_path):
+        return send_file(
+            apk_path,
+            as_attachment=True,
+            download_name='ROMUSIC.apk',
+            mimetype='application/vnd.android.package-archive'
+        )
+    return redirect(url_for('index'))
+
+
 @app.route('/api/stream/<song_identifier>')
 def stream_audio(song_identifier):
     """
