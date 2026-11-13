@@ -258,21 +258,6 @@ def service_worker():
     return send_file(os.path.join(app.root_path, 'static', 'sw.js'), mimetype='application/javascript')
 
 
-@app.route('/download')
-@app.route('/download/apk')
-def download_apk():
-    """Direct APK download route for mobile devices."""
-    apk_path = os.path.join(app.root_path, 'static', 'download', 'ROMUSIC.apk')
-    if os.path.exists(apk_path):
-        return send_file(
-            apk_path,
-            as_attachment=True,
-            download_name='ROMUSIC.apk',
-            mimetype='application/vnd.android.package-archive'
-        )
-    return redirect(url_for('index'))
-
-
 @app.route('/api/stream/<song_identifier>')
 def stream_audio(song_identifier):
     """
@@ -367,21 +352,26 @@ def api_lyrics():
 def index():
     user_id = current_user.id if current_user.is_authenticated else None
     
-    # Hero featured song
-    featured_song = Song.query.filter(Song.title.ilike('%Jaada%')).first() or Song.query.first()
+    # Hero featured song (Always a high-octane modern banger, never Malare)
+    featured_song = (
+        Song.query.filter(Song.title.ilike('%Jaada%')).first()
+        or Song.query.filter(Song.title.ilike('%Illuminati%')).first()
+        or Song.query.filter(Song.title.ilike('%Badass%')).first()
+        or Song.query.filter(~Song.title.ilike('%Malare%')).first()
+    )
     
     # Sections
     recently_played = []
     if current_user.is_authenticated:
         recent_records = RecentlyPlayed.query.filter_by(user_id=current_user.id).order_by(RecentlyPlayed.played_at.desc()).limit(10).all()
-        recently_played = [r.song for r in recent_records if r.song]
+        recently_played = [r.song for r in recent_records if r.song and 'Malare' not in r.song.title]
     if not recently_played:
-        recently_played = Song.query.order_by(Song.plays_count.desc()).limit(8).all()
+        recently_played = Song.query.filter(~Song.title.ilike('%Malare%')).order_by(Song.plays_count.desc()).limit(8).all()
 
-    trending_songs = Song.query.order_by(Song.plays_count.desc()).limit(10).all()
+    trending_songs = Song.query.filter(~Song.title.ilike('%Malare%')).order_by(Song.plays_count.desc()).limit(10).all()
     
-    # Language collections
-    malayalam_songs = Song.query.filter_by(language='Malayalam').all()
+    # Language collections (Priority modern bangers)
+    malayalam_songs = Song.query.filter(Song.language == 'Malayalam', ~Song.title.ilike('%Malare%')).all()
     tamil_songs = Song.query.filter_by(language='Tamil').all()
     hindi_songs = Song.query.filter_by(language='Hindi').all()
     english_songs = Song.query.filter_by(language='English').all()

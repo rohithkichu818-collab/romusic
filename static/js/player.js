@@ -408,8 +408,12 @@ class RoMusicPlayer {
 
     togglePlay() {
         if (!this.currentTrack) {
-            if (this.queue.length > 0) {
-                this.playTrack(this.queue[0]);
+            // Only auto-play if queue has an explicitly selected track (never Malare)
+            const validTrack = this.queue.find(t => t && t.title && !t.title.includes('Malare'));
+            if (validTrack) {
+                this.playTrack(validTrack);
+            } else {
+                this.showToast('Please search or choose a song to play');
             }
             return;
         }
@@ -482,6 +486,11 @@ class RoMusicPlayer {
                     try {
                         localStorage.setItem('romusic_queue', JSON.stringify(this.queue));
                     } catch (e) {}
+
+                    // Update live Radio Mix UI if visible on the page
+                    if (typeof window.renderRadioSection === 'function') {
+                        window.renderRadioSection(newTracks, track);
+                    }
                 }
             }
         } catch (e) {
@@ -1258,25 +1267,32 @@ class RoMusicPlayer {
 
     /* ------- INITIAL QUEUE LOADER (PERSISTENCE-AWARE) ------- */
     async loadInitialQueue() {
-        // Step 1: Check if user already had an active track loaded or playing in localStorage
+        // Step 1: Automatic purge of legacy stale "Malare" cache from localStorage
         const savedTrackRaw = localStorage.getItem('romusic_current_track');
         if (savedTrackRaw) {
             try {
                 const savedTrack = JSON.parse(savedTrackRaw);
-                if (savedTrack && (savedTrack.title || savedTrack.id)) {
+                if (savedTrack && savedTrack.title && (savedTrack.title.includes('Malare') || savedTrack.title.includes('Premam'))) {
+                    console.log('[RoMusic Cache Purge]: Clearing legacy Malare seed track.');
+                    localStorage.removeItem('romusic_current_track');
+                    localStorage.removeItem('romusic_queue');
+                    localStorage.removeItem('romusic_current_index');
+                } else if (savedTrack && (savedTrack.title || savedTrack.id)) {
                     this.currentTrack = savedTrack;
                     this.updateMetadataUI(savedTrack);
 
                     const savedQueue = localStorage.getItem('romusic_queue');
                     if (savedQueue) {
-                        try { this.queue = JSON.parse(savedQueue); } catch (e) {}
+                        try {
+                            const parsedQ = JSON.parse(savedQueue);
+                            this.queue = Array.isArray(parsedQ) ? parsedQ.filter(t => t && t.title && !t.title.includes('Malare')) : [];
+                        } catch (e) {}
                     }
                     const savedIndex = localStorage.getItem('romusic_current_index');
                     if (savedIndex !== null) {
                         this.currentIndex = parseInt(savedIndex) || 0;
                     }
                     this.renderQueue();
-                    // PRESERVE CURRENT SONG! DO NOT OVERWRITE WITH MALARE!
                     return;
                 }
             } catch (e) {
@@ -1284,7 +1300,7 @@ class RoMusicPlayer {
             }
         }
 
-        // Step 2: If no track was saved yet, show clean state (Never auto-default to Malare)
+        // Step 2: Clean idle state - NO MALARE EVER
         this.queue = [];
         this.currentIndex = -1;
         this.currentTrack = null;

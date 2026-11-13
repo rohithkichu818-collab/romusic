@@ -137,6 +137,21 @@
         </div>
     </section>
 
+    <!-- ============ SPOTIFY DYNAMIC RADIO (RELATED TRACKS) ============ -->
+    <section id="radio-section" class="hidden mt-10 pt-8 border-t border-white/10">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <div class="text-[10px] font-mono uppercase text-[#35D6FF] font-bold tracking-widest flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-[#35D6FF] animate-pulse"></span>
+                    <span>SPOTIFY RADIO • CONTINUOUS MIX</span>
+                </div>
+                <h3 id="radio-heading" class="text-xl font-bold font-display text-white mt-1">Recommended Tracks (Up Next)</h3>
+            </div>
+            <span class="text-xs font-mono text-gray-400">Auto-plays Next</span>
+        </div>
+        <div id="radio-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"></div>
+    </section>
+
 </div>
 
 <script>
@@ -342,6 +357,54 @@ function playTrack(track) {
     }
 }
 
+window.renderRadioSection = function(recs, currentSong) {
+    const section = document.getElementById('radio-section');
+    const grid = document.getElementById('radio-results-grid');
+    const heading = document.getElementById('radio-heading');
+    if (!section || !grid) return;
+
+    if (!recs || recs.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    if (heading && currentSong) {
+        heading.textContent = `Radio Mix: Based on "${currentSong.title}"`;
+    }
+
+    grid.innerHTML = '';
+    recs.forEach(track => {
+        const card = document.createElement('div');
+        card.className = 'romusic-card group p-3.5 cursor-pointer flex flex-col justify-between';
+        card.onclick = () => {
+            if (window.player) window.player.playTrack(track);
+        };
+        card.innerHTML = `
+            <div>
+                <div class="relative w-full aspect-square rounded-2xl overflow-hidden mb-3 bg-[#090B16]">
+                    <img src="${track.cover_url}" alt="${track.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='/static/images/covers/cover_default.svg'">
+                    <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/80 text-[10px] font-mono text-white font-semibold">${track.formatted_duration || ''}</div>
+                    <div class="card-play-btn absolute inset-0 flex items-center justify-center bg-black/40">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-r from-[#9B5CFF] to-[#35D6FF] text-[#090B16] flex items-center justify-center shadow-xl shadow-[#35D6FF]/50 group-hover:scale-110 transition">
+                            <i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>
+                        </div>
+                    </div>
+                    <div class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#9B5CFF]/30 border border-[#9B5CFF]/50 text-[10px] font-mono font-bold text-[#35D6FF] flex items-center space-x-1">
+                        <span>${track.vibe_match || 'Radio Mix'}</span>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <h4 class="font-bold text-sm text-white truncate group-hover:text-[#35D6FF] transition">${track.title}</h4>
+                    <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+    section.classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+};
 
 // Auto-search if query param is present (runs on both full load & SPA navigation)
 (function initSearchOnLoad() {

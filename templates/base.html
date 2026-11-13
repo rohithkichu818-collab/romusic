@@ -180,10 +180,10 @@
 
                 <!-- Right Quick Actions -->
                 <div class="flex items-center space-x-3">
-                    <a href="/download" download class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/20 border border-[#35D6FF]/40 text-xs font-semibold text-white hover:border-[#35D6FF] transition shadow-md shadow-[#35D6FF]/10" title="Download ROMUSIC Android App">
-                        <i data-lucide="smartphone" class="w-3.5 h-3.5 text-[#35D6FF]"></i>
-                        <span>Get APK</span>
-                    </a>
+                    <button id="btn-install-pwa" onclick="triggerPWAInstall()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#9B5CFF]/30 to-[#35D6FF]/20 border border-[#35D6FF]/40 text-xs font-semibold text-white hover:border-[#35D6FF] transition shadow-md shadow-[#35D6FF]/10" title="Install ROMUSIC on Phone/Desktop">
+                        <i data-lucide="download" class="w-3.5 h-3.5 text-[#35D6FF]"></i>
+                        <span>Install App</span>
+                    </button>
                     <button onclick="window.player && window.player.openModal()" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-300 hover:text-white transition">
                         <div class="flex space-x-0.5 items-end h-3">
                             <span class="eq-bar"></span>
@@ -510,7 +510,7 @@
     <script src="{{ url_for('static', filename='js/player.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
-    <!-- Register PWA Service Worker -->
+    <!-- Register PWA Service Worker & Install Handler -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -519,6 +519,26 @@
                 });
             });
         }
+
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        window.triggerPWAInstall = async function() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+            } else {
+                if (window.showToast) {
+                    window.showToast('Phone-il install aakkaan: Browser menu (⋮) amarthi "Install app" select cheyyuka');
+                } else {
+                    alert('Phone-il install aakkaan: Chrome menu (⋮) amarthi "Install app" select cheyyuka');
+                }
+            }
+        };
     </script>
     <!-- Seamless In-DOM Official Audio Delivery Engine (Standard Dimensions to bypass suppression) -->
     <div id="romusic-yt-player-container" style="position:fixed;bottom:80px;right:10px;width:240px;height:180px;overflow:hidden;pointer-events:none;opacity:0.001;z-index:-10;">
