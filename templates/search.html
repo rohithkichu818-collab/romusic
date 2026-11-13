@@ -343,13 +343,14 @@ function playTrack(track) {
 }
 
 
-// Auto-search if query param is present
-document.addEventListener('DOMContentLoaded', () => {
-    const q = document.getElementById('unified-search-input').value.trim();
+// Auto-search if query param is present (runs on both full load & SPA navigation)
+(function initSearchOnLoad() {
+    const input = document.getElementById('unified-search-input');
+    const q = input ? input.value.trim() : '';
     if (q) {
         handleUnifiedSearch();
     }
     if (window.lucide) lucide.createIcons();
-});
+})();
 </script>
 {% endblock %}

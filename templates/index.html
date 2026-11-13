@@ -234,7 +234,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Midnight Drive -->
-            <div class="p-6 rounded-2xl bg-gradient-to-br from-[#181C33] to-[#090B16] border border-[#9B5CFF]/30 hover:border-[#9B5CFF] transition group cursor-pointer" onclick="window.location='{{ url_for('search_page', category='Midnight Drive') }}'">
+            <div class="p-6 rounded-2xl bg-gradient-to-br from-[#181C33] to-[#090B16] border border-[#9B5CFF]/30 hover:border-[#9B5CFF] transition group cursor-pointer" onclick="window.navigateTo('{{ url_for('search_page', category='Midnight Drive') }}')">
                 <div class="w-12 h-12 rounded-xl bg-[#9B5CFF]/20 flex items-center justify-center text-[#9B5CFF] mb-4 group-hover:scale-110 transition">
                     <i data-lucide="moon" class="w-6 h-6"></i>
                 </div>
@@ -244,7 +244,7 @@
             </div>
 
             <!-- Aurora Chill -->
-            <div class="p-6 rounded-2xl bg-gradient-to-br from-[#181C33] to-[#090B16] border border-[#35D6FF]/30 hover:border-[#35D6FF] transition group cursor-pointer" onclick="window.location='{{ url_for('search_page', category='Aurora') }}'">
+            <div class="p-6 rounded-2xl bg-gradient-to-br from-[#181C33] to-[#090B16] border border-[#35D6FF]/30 hover:border-[#35D6FF] transition group cursor-pointer" onclick="window.navigateTo('{{ url_for('search_page', category='Aurora') }}')">
                 <div class="w-12 h-12 rounded-xl bg-[#35D6FF]/20 flex items-center justify-center text-[#35D6FF] mb-4 group-hover:scale-110 transition">
                     <i data-lucide="waves" class="w-6 h-6"></i>
                 </div>
@@ -254,7 +254,7 @@
             </div>
 
             <!-- Neon Focus -->
-            <div class="p-6 rounded-2xl bg-gradient-to-br from-[#181C33] to-[#090B16] border border-[#B57EDC]/30 hover:border-[#B57EDC] transition group cursor-pointer" onclick="window.location='{{ url_for('search_page', category='Neon Focus') }}'">
+            <div class="p-6 rounded-2xl bg-gradient-to-br from-[#181C33] to-[#090B16] border border-[#B57EDC]/30 hover:border-[#B57EDC] transition group cursor-pointer" onclick="window.navigateTo('{{ url_for('search_page', category='Neon Focus') }}')">
                 <div class="w-12 h-12 rounded-xl bg-[#B57EDC]/20 flex items-center justify-center text-[#B57EDC] mb-4 group-hover:scale-110 transition">
                     <i data-lucide="zap" class="w-6 h-6"></i>
                 </div>
@@ -275,7 +275,7 @@
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6">
             {% for artist in artists %}
-            <div class="flex flex-col items-center text-center p-4 rounded-2xl glass-panel hover:border-[#35D6FF]/40 transition group cursor-pointer" onclick="window.location='{{ url_for('artist_profile', artist_id=artist.id) }}'">
+            <div class="flex flex-col items-center text-center p-4 rounded-2xl glass-panel hover:border-[#35D6FF]/40 transition group cursor-pointer" onclick="window.navigateTo('{{ url_for('artist_profile', artist_id=artist.id) }}')">
                 <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden mb-3 border-2 border-white/10 group-hover:border-[#35D6FF] transition shadow-xl">
                     <img src="{{ artist.image_url }}" alt="{{ artist.name }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                 </div>

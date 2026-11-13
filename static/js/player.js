@@ -70,8 +70,8 @@ class RoMusicPlayer {
 
         try {
             this.ytPlayer = new YT.Player('romusic-yt-player', {
-                height: '1',
-                width: '1',
+                height: '200',
+                width: '240',
                 playerVars: {
                     'autoplay': 1,
                     'controls': 0,
@@ -79,11 +79,16 @@ class RoMusicPlayer {
                     'fs': 0,
                     'playsinline': 1,
                     'rel': 0,
+                    'enablejsapi': 1,
                     'origin': window.location.origin
                 },
                 events: {
                     'onReady': () => {
                         this.ytReady = true;
+                        if (this.pendingStreamId) {
+                            this.playVideoWithYt(this.pendingStreamId);
+                            this.pendingStreamId = null;
+                        }
                     },
                     'onStateChange': (e) => this.onYTStateChange(e),
                     'onError': (e) => this.onYTError(e)
@@ -91,6 +96,21 @@ class RoMusicPlayer {
             });
         } catch (e) {
             console.warn('[RoMusic YT Engine Init]:', e);
+        }
+    }
+
+    playVideoWithYt(videoId) {
+        if (!this.ytPlayer) return;
+        this.currentAudioSource = 'youtube';
+        this.audio.pause();
+        try {
+            if (typeof this.ytPlayer.loadVideoById === 'function') {
+                this.ytPlayer.loadVideoById(videoId);
+                this.ytPlayer.playVideo();
+                this.onPlayState(true);
+            }
+        } catch (e) {
+            console.warn('[YT playVideo error]:', e);
         }
     }
 
@@ -113,15 +133,37 @@ class RoMusicPlayer {
         }
     }
 
-    onYTError(event) {
-        console.warn('[RoMusic YT Engine Error, fallback to direct stream]:', event.data);
-        if (this.currentTrack) {
+    async onYTError(event) {
+        console.warn('[RoMusic YT Engine Error code]:', event.data);
+        // Error 101 or 150 = Embedding restricted by owner (e.g. Universal Music, VEVO)
+        // Auto-switch to alternate audio/lyric version of the same song!
+        if ((event.data === 101 || event.data === 150) && this.currentTrack && !this.currentTrack._triedAlt) {
+            this.currentTrack._triedAlt = true;
+            try {
+                const cleanT = (this.currentTrack.title || '').replace(/[\(\[].*?[\)\]]/g, '').trim();
+                const cleanA = (this.currentTrack.artist || '').replace(/[\(\[].*?[\)\]]/g, '').trim();
+                const q = encodeURIComponent(`${cleanT} ${cleanA} audio`);
+                const res = await fetch(`/api/yt/search?q=${q}&limit=3`);
+                if (res.ok) {
+                    const tracks = await res.json();
+                    const alt = tracks.find(t => t.id !== (this.currentTrack.youtube_id || this.currentTrack.id));
+                    if (alt && alt.id) {
+                        console.log('[RoMusic Auto-Switching to Alternate HQ Stream]:', alt.title);
+                        this.currentTrack.youtube_id = alt.id;
+                        this.playVideoWithYt(alt.id);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn('[YT Alternate Stream Error]:', err);
+            }
+        }
+
+        // Secondary fallback to server stream if local upload
+        if (this.currentTrack && !isNaN(this.currentTrack.id)) {
             this.currentAudioSource = 'html5';
             this.stopYTPolling();
-            const streamId = this.currentTrack.youtube_id || this.currentTrack.id;
-            const tParam = encodeURIComponent(this.currentTrack.title || '');
-            const aParam = encodeURIComponent(this.currentTrack.artist || '');
-            this.audio.src = `/api/stream/${streamId}?title=${tParam}&artist=${aParam}`;
+            this.audio.src = `/api/stream/${this.currentTrack.id}`;
             this.audio.play().then(() => this.onPlayState(true)).catch(console.warn);
         }
     }
@@ -326,45 +368,31 @@ class RoMusicPlayer {
         // Determine stream ID
         const streamId = track.youtube_id || (isNaN(track.id) ? track.id : null);
 
-        // Check if we can play directly via high-speed global delivery engine (YouTube IFrame API)
-        if (streamId && (this.ytReady || (window.YT && window.YT.Player))) {
-            this.currentAudioSource = 'youtube';
-            this.audio.pause();
-            
-            if (this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
-                this.ytPlayer.loadVideoById(streamId);
-                this.ytPlayer.playVideo();
-                this.onPlayState(true);
-            } else {
-                this.createYTPlayer();
-                setTimeout(() => {
-                    if (this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
-                        this.ytPlayer.loadVideoById(streamId);
-                        this.ytPlayer.playVideo();
-                        this.onPlayState(true);
-                    }
-                }, 600);
-            }
-        } else {
-            // HTML5 Fallback or local file
+        // Case 1: Local uploaded file (numeric ID and no YouTube ID)
+        if (!streamId && !isNaN(track.id)) {
             this.currentAudioSource = 'html5';
             this.stopYTPolling();
             if (this.ytPlayer && typeof this.ytPlayer.stopVideo === 'function') {
                 this.ytPlayer.stopVideo();
             }
-
-            const sId = track.youtube_id || track.id;
-            const tParam = encodeURIComponent(track.title || '');
-            const aParam = encodeURIComponent(track.artist || '');
-            const streamUrl = `/api/stream/${sId}?title=${tParam}&artist=${aParam}`;
-
-            this.audio.src = streamUrl;
-            
+            this.audio.src = `/api/stream/${track.id}`;
             try {
                 await this.audio.play();
                 this.onPlayState(true);
             } catch (err) {
-                console.warn('[RoMusic Playback Error]:', err);
+                console.warn('[HTML5 Audio Error]:', err);
+            }
+        } else {
+            // Case 2: Global high-performance cloud audio delivery (YouTube IFrame API)
+            const targetId = streamId || track.id;
+            this.currentAudioSource = 'youtube';
+            this.audio.pause();
+
+            if (this.ytPlayer && this.ytReady && typeof this.ytPlayer.loadVideoById === 'function') {
+                this.playVideoWithYt(targetId);
+            } else {
+                this.pendingStreamId = targetId;
+                this.initYouTubeEngine();
             }
         }
 
@@ -1256,20 +1284,12 @@ class RoMusicPlayer {
             }
         }
 
-        // Step 2: Only if no track was ever loaded, load initial catalogue
-        try {
-            const resp = await fetch('/api/songs');
-            const songs = await resp.json();
-            if (Array.isArray(songs) && songs.length > 0) {
-                this.queue = songs;
-                this.currentIndex = 0;
-                this.currentTrack = songs[0];
-                this.updateMetadataUI(songs[0]);
-                this.renderQueue();
-            }
-        } catch (err) {
-            console.warn('[Queue Load Error]:', err);
-        }
+        // Step 2: If no track was saved yet, show clean state (Never auto-default to Malare)
+        this.queue = [];
+        this.currentIndex = -1;
+        this.currentTrack = null;
+        if (this.title) this.title.textContent = 'Select a track to start listening';
+        if (this.artist) this.artist.textContent = 'Explore songs or search above';
     }
 
     /* ------- UTILITY HELPERS ------- */

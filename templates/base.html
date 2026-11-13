@@ -2,7 +2,7 @@
 <html lang="en" class="h-full bg-[#090B16] text-white">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>{% block title %}ROMUSIC — Next-Gen Music Architecture{% endblock %}</title>
 
     <!-- Tailwind CSS CDN -->
@@ -516,8 +516,8 @@
             });
         }
     </script>
-    <!-- Hidden Off-screen Official Audio Delivery Engine -->
-    <div id="romusic-yt-player-container" style="position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0.001;z-index:-9999;">
+    <!-- Seamless In-DOM Official Audio Delivery Engine (Standard Dimensions to bypass suppression) -->
+    <div id="romusic-yt-player-container" style="position:fixed;bottom:80px;right:10px;width:240px;height:180px;overflow:hidden;pointer-events:none;opacity:0.001;z-index:-10;">
         <div id="romusic-yt-player"></div>
     </div>
 </body>

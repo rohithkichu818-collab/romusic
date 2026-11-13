@@ -638,8 +638,9 @@ def api_songs():
 @app.route('/api/recommendations')
 def api_recommendations():
     """
-    Spotify-grade Smart Autoplay & Related Songs Recommendation Engine.
-    Returns songs matching the current artist, genre, language, or acoustic vibe.
+    Spotify-grade Smart Autoplay & Related Songs Dynamic Radio Engine.
+    Dynamically generates a cohesive stream of tracks related to the playing song.
+    Never injects unrelated static seed songs (e.g. Malare/Illuminati) unless they match the artist/vibe.
     """
     title = request.args.get('title', '').strip()
     artist = request.args.get('artist', '').strip()
@@ -650,40 +651,41 @@ def api_recommendations():
     seen_ids = set()
     recommendations = []
 
-    # 1. Query local songs by same artist or genre/language
-    if artist:
+    # Clean title and artist for accurate matching
+    clean_title = re.sub(r'[\(\[].*?[\)\]]', '', title).strip()
+    clean_title = re.sub(r'(?i)\b(official|video|audio|lyric|lyrical|hd|4k|song|track|full)\b', '', clean_title).strip()
+
+    clean_artist = re.sub(r'[\(\[].*?[\)\]]', '', artist).strip()
+    clean_artist = re.sub(r'(?i)\b(official|channel|vevo|records|music)\b', '', clean_artist).strip()
+
+    # Extract primary artist name if multiple collaborators (e.g. "ARJN x KDS x FIFTY4" -> "ARJN")
+    primary_artist = re.split(r'(?i)\s*(?:x|,|&|feat\.?|ft\.?)\s*', clean_artist)[0].strip() if clean_artist else ''
+
+    # 1. Query local songs ONLY if they genuinely match the playing artist or specific album
+    if primary_artist and len(primary_artist) > 2:
         local_artist_songs = Song.query.join(Artist).filter(
-            Artist.name.ilike(f"%{artist}%"),
+            Artist.name.ilike(f"%{primary_artist}%"),
             Song.title != title
         ).limit(4).all()
         for s in local_artist_songs:
-            if s.id not in seen_ids:
+            if s.id not in seen_ids and (not s.youtube_id or s.youtube_id not in seen_ids):
                 seen_ids.add(s.id)
+                if s.youtube_id:
+                    seen_ids.add(s.youtube_id)
                 d = s.to_dict(user_id)
-                d['vibe_match'] = f"From {artist}"
+                d['vibe_match'] = f"From {primary_artist}"
                 recommendations.append(d)
 
-    if language:
-        local_lang_songs = Song.query.filter(
-            Song.language == language,
-            Song.title != title
-        ).limit(3).all()
-        for s in local_lang_songs:
-            if s.id not in seen_ids:
-                seen_ids.add(s.id)
-                d = s.to_dict(user_id)
-                d['vibe_match'] = f"Similar {language} Vibe"
-                recommendations.append(d)
-
-    # 2. Query Global dynamic cloud recommendations (Spotify Radio style)
-    if YT_DLP_AVAILABLE and (artist or title):
+    # 2. Query Global dynamic catalog via YouTube (Spotify Radio Mode)
+    if YT_DLP_AVAILABLE and (clean_artist or clean_title):
         try:
-            clean_title = re.sub(r'[\(\[].*?[\)\]]', '', title).strip()
-            clean_artist = re.sub(r'[\(\[].*?[\)\]]', '', artist).strip()
-            if clean_artist and clean_artist.lower() not in ('various artists', 'universal artist', 'unknown'):
-                rec_query = f"{clean_artist} songs hit audio"
+            # Build targeted dynamic radio search query
+            if primary_artist and primary_artist.lower() not in ('various artists', 'universal artist', 'unknown'):
+                rec_query = f"{primary_artist} songs hit audio"
+            elif clean_title:
+                rec_query = f"{clean_title} songs similar audio"
             else:
-                rec_query = f"{clean_title} similar songs audio"
+                rec_query = "trending south indian songs audio"
 
             ydl_opts = {
                 'quiet': True,
@@ -698,7 +700,7 @@ def api_recommendations():
                 }
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(f"ytsearch10:{rec_query}", download=False)
+                info = ydl.extract_info(f"ytsearch12:{rec_query}", download=False)
                 entries = info.get('entries', []) if info else []
                 for d in entries:
                     if not d:
@@ -712,11 +714,12 @@ def api_recommendations():
 
                     seen_ids.add(vid)
                     thumb = d.get('thumbnail') or f"https://img.youtube.com/vi/{vid}/hqdefault.jpg"
+                    rec_artist = d.get('channel') or d.get('uploader') or primary_artist or 'Related Artist'
                     recommendations.append({
                         'id': vid,
                         'youtube_id': vid,
                         'title': rec_title,
-                        'artist': d.get('channel') or d.get('uploader') or artist or 'Related Artist',
+                        'artist': rec_artist,
                         'cover_url': thumb,
                         'stream_url': f'/api/stream/{vid}',
                         'duration': d.get('duration') or 0,
